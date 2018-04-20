@@ -12,6 +12,8 @@ const scrypt = require('scrypt'); // scrypt library
 const moment = require('moment');
 const jwt = require('jsonwebtoken'); // JSON Web Token implementation
 const randomstring = require('randomstring');
+const fetch = require('node-fetch');
+const htmlparser = require('htmlparser');
 
 class User {
 
@@ -46,32 +48,13 @@ class User {
     }
 
     try {
-      const [teams] = await global.db.query(
-        'select teamID from teamManager where userID = :id',
-        {
-          id: user.id
-        }
-      );
-
-      let teamList = [];
-      for (let t of teams) {
-        teamList.push(t.teamID);
-        let subTeams = await findSubTeams(t.teamID);
-
-        if (subTeams.length) {
-          for (let s of subTeams) {
-            teamList.push(s);
-          }
-        }
-      }
 
       const payload = {
         id: user.id, // to get user details
         role: user.role, // make role available without db query
         teamID: user.teamID,
         teamName: user.teamName,
-        sharedData: user.sharedData,
-        managedTeams: teamList
+        sharedData: user.sharedData
       };
       //console.log('env', process.env.TOKEN_TIME);
       const token = jwt.sign(payload, process.env.JWT_KEY, {
@@ -87,7 +70,6 @@ class User {
         fname: user.fname,
         lname: user.lname,
         id: user.id,
-        managedTeams: teamList,
         refreshToken: refreshToken,
         expires: decoded.exp
       };
@@ -183,12 +165,71 @@ class User {
     ctx.body = user;
   }
 
-  static async get(id) {
+  static async scrape(ctx){
+    const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
-      'Select id, email, fname, lname, role, status, billingDay, billingRate, customerID From user Where id = :id',
+      `SELECT * 
+        FROM user 
+        WHERE id = :id`,
+      { id: userID }
+    );
+
+    const pagePromise = await fetch(`https://www.freecodecamp.org/${user.fccCode}`);
+    const pageText = await pagePromise.text();
+    // console.log(pageText);
+
+    const handler = new htmlparser.DefaultHandler(function (error, dom) {
+      if (error) {
+        console.log('err', error);
+      } else {
+        const rows = dom[1].children[1].children[7].children[7].children[3].children[0].children[0];
+        for (const r of rows) {
+          if (r.name === 'tr') {
+
+          }
+        }
+      }
+    });
+    const parser = new htmlparser.Parser(handler);
+    parser.parseComplete(pageText);
+
+    ctx.body = {result: 'Data Scraped'};
+  }
+
+  static async getMe(ctx) {
+    const userID = ctx.state.user.id;
+    ctx.body = await User.get(userID);
+  }
+
+  static async getUser(ctx) {
+    const userID = ctx.params.userID;
+    ctx.body = await User.get(userID);
+  }
+
+  static async get(id) {
+    const user = {
+      info: {},
+      challenges: []
+    };
+    [[user.info]] = await global.db.query(
+      `SELECT * 
+        FROM user 
+        WHERE id = :id`,
       { id }
     );
-    user.password = null;
+    user.info.password = null;
+
+    [user.challenges] = await global.db.query(
+      `SELECT c.name, uc.updated, uc.completed
+        FROM userChallenge AS uc, challenge AS c
+        WHERE uc.userID = :id
+          AND uc.challengeID = c.id`,
+      { id }
+    );
+
+    user.challengeCount = user.challenges.length;
+
+
     return user;
   }
 
@@ -376,9 +417,8 @@ class User {
 
   static async getBy(field, value) {
     try {
-      const sql = `Select u.*, t.id as teamID, t.name as teamName, t.sharedData 
+      const sql = `Select u.*
                      From user u 
-                          left outer join team t on u.teamID = t.id
                     Where u.${field} = :${field} 
                     Order By u.fname, u.lname`;
       const [users] = await global.db.query(sql, { [field]: value });
@@ -532,6 +572,7 @@ class User {
     }
     ctx.body = result; //Return only the ID
   }
+
 }
 
 let makeCode = function() {
@@ -544,6 +585,8 @@ let makeCode = function() {
 };
 
 async function teamSecurity(user, teamID) {
+  return true;
+
   let sqla = `select * from teamManager where teamID = :teamID and userID = :userID`;
   const [[manager]] = await global.db.query(sqla, {
     teamID: teamID,

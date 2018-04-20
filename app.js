@@ -149,10 +149,10 @@ app.use(async function verifyJwt(ctx, next) {
     const payload = jwt.verify(token, process.env.JWT_KEY); // throws on invalid token
     // valid token: accept it...
 
-    let sqla = `select holding, status from user where id = ${payload.id}`;
+    let sqla = `select status from user where id = ${payload.id}`;
     const [[res]] = await global.db.query(sqla);
 
-    if (res.holding === 1 || res.status === 0){
+    if (res.status === 0){
       throw({status: 401, message: "Account Disabled"});
     }
 
