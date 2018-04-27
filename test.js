@@ -12,10 +12,9 @@ async function test() {
     } else {
       const rows = dom[1].children[1].children[7].children[7].children[3].children[0].children[0];
       for (const r of rows.children) {
-        console.log('test', r);
-        // if (r.name === 'tr') {
-        //
-        // }
+        if (r.name === 'tr') {
+          console.log(r.children);
+        }
       }
     }
   });
