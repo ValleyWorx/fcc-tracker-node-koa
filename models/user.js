@@ -174,6 +174,7 @@ class User {
       { id: userID }
     );
 
+
     const pagePromise = await fetch(`https://www.freecodecamp.org/${user.fccCode}`);
     const pageText = await pagePromise.text();
     // console.log(pageText);
@@ -183,9 +184,35 @@ class User {
         console.log('err', error);
       } else {
         const rows = dom[1].children[1].children[7].children[7].children[3].children[0].children[0];
-        console.log(rows);
-        for (const r of rows) {
+        for (const r of rows.children) {
           if (r.name === 'tr') {
+            let updated = "";
+            let challengeID =0;
+            const challenge = r.children[0].children[0].data;
+            const completed = moment(r.children[1].children[0].data).format("YYYY-MM-DD");
+            if(r.children[2].children){
+              updated = moment(r.children[2].children[0].data).format("YYYY-MM-DD");
+            }
+            console.log(challenge,completed,updated);
+
+            //go into db and take c.id that = challenge
+            const [chall]=global.db.query
+            ('SELECT id FROM challenge WHERE name = :challenge',{challenge: challenge});
+
+            //  if chall is not found/has length insert
+            if(chall.length) {
+                challengeID = chall[0].id;
+            } else {
+                const insChal = global.db.query
+                ('INSERT INTO challenge (name) values (:challenge)');
+                console.log('inserted challenge', insChal);
+                process.exit();
+            }
+
+            // global.db.query(
+            //     'INSERT INTO userChallenge(userID, challengeID, completed, updated)' +
+            //     'VALUES (:challenge, :completed, :updated)',
+            //     {challenge: challenge, completed: completed, updated: updated});
 
           }
         }
