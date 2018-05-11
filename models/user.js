@@ -165,6 +165,41 @@ class User {
     ctx.body = user;
   }
 
+  static async processChallenges(userID, rows){
+
+    const tableName = 'challenge';
+    for (const r of rows.children) {
+      if (r.name === 'tr') {
+        let updated = null;
+        let challengeID =0;
+        const challenge = r.children[0].children[0].data;
+        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+        if(r.children[2].children){
+          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+        }
+        console.log(challenge,completed,updated);
+
+        //go into db and take c.id that = challenge
+        const [chall] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :challenge`, {challenge: challenge});
+
+        //  if chall is not found/has length insert
+        if(chall.length) {
+          challengeID = chall[0].id;
+        } else {
+          const [insChal] = await global.db.query('INSERT INTO challenge (name) values (:challenge)', {challenge: challenge});
+          challengeID = insChal.insertId;
+        }
+
+        global.db.query(
+          'INSERT INTO userChallenge(userID, challengeID, completed, updated)' +
+          'VALUES (:userID, :challengeID, :completed, :updated)',
+          { userID: userID, challengeID: challengeID, completed: completed, updated: updated });
+
+      }
+    }
+
+  }
+
   static async scrape(ctx){
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
@@ -174,7 +209,6 @@ class User {
       { id: userID }
     );
 
-
     const pagePromise = await fetch(`https://www.freecodecamp.org/${user.fccCode}`);
     const pageText = await pagePromise.text();
     // console.log(pageText);
@@ -183,34 +217,14 @@ class User {
       if (error) {
         console.log('err', error);
       } else {
-        const rows = dom[1].children[1].children[7].children[7].children[3].children[0].children[0];
-        for (const r of rows.children) {
-          if (r.name === 'tr') {
-            let updated = null;
-            let challengeID =0;
-            const challenge = r.children[0].children[0].data;
-            const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
-            if(r.children[2].children){
-              updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
-            }
-            console.log(challenge,completed,updated);
-
-            //go into db and take c.id that = challenge
-            const [chall] = await global.db.query('SELECT id FROM challenge WHERE name = :challenge', {challenge: challenge});
-
-            //  if chall is not found/has length insert
-            if(chall.length) {
-                challengeID = chall[0].id;
-            } else {
-              const [insChal] = await global.db.query('INSERT INTO challenge (name) values (:challenge)', {challenge: challenge});
-              challengeID = insChal.insertId;
-            }
-
-            global.db.query(
-                'INSERT INTO userChallenge(userID, challengeID, completed, updated)' +
-                'VALUES (:userID, :challengeID, :completed, :updated)',
-                { userID: userID, challengeID: challengeID, completed: completed, updated: updated });
-
+        const rows = dom[1].children[1].children[7].children[7].children[3];
+        for (let i in rows.children){ //Loop through all of the sections here
+          const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
+          const tableType = thSpot.data;
+          switch (tableType){
+            case 'Challenges':
+              await User.processChallenges(userID, rows.children[i].children[0]);
+              break;
           }
         }
       }
