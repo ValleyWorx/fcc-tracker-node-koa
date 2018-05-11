@@ -183,6 +183,7 @@ class User {
         console.log('err', error);
       } else {
         const rows = dom[1].children[1].children[7].children[7].children[3].children[0].children[0];
+        console.log(rows);
         for (const r of rows) {
           if (r.name === 'tr') {
 
