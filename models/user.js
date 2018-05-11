@@ -50,28 +50,28 @@ class User {
     try {
 
       const payload = {
-        id: user.id, // to get user details
-        role: user.role, // make role available without db query
-        teamID: user.teamID,
-        teamName: user.teamName,
-        sharedData: user.sharedData
+        id:         user.id, // to get user details
+        role:       user.role, // make role available without db query
+        teamID:     user.teamID,
+        teamName:   user.teamName,
+        sharedData: user.sharedData,
       };
       //console.log('env', process.env.TOKEN_TIME);
       const token = jwt.sign(payload, process.env.JWT_KEY, {
-        expiresIn: process.env.TOKEN_TIME
+        expiresIn: process.env.TOKEN_TIME,
       });
       const refreshToken = randomstring.generate(50);
       const decoded = jwt.verify(token, process.env.JWT_KEY); // throws on invalid token
       const ret = User.addToken(user.id, refreshToken);
 
       ctx.body = {
-        jwt: token,
-        role: user.role,
-        fname: user.fname,
-        lname: user.lname,
-        id: user.id,
+        jwt:          token,
+        role:         user.role,
+        fname:        user.fname,
+        lname:        user.lname,
+        id:           user.id,
         refreshToken: refreshToken,
-        expires: decoded.exp
+        expires:      decoded.exp,
       };
     } catch (e) {
       console.log(e);
@@ -83,7 +83,7 @@ class User {
 
   static async deactivate(ctx) {
     await global.db.query('update user set status = 0 where id = :id', {
-      id: ctx.state.user.id
+      id: ctx.state.user.id,
     });
     ctx.body = { msg: 'updated' };
   }
@@ -95,21 +95,21 @@ class User {
     await global.db.query(
       'update user set status = 1, billingDay = :billingDay where id = :id',
       {
-        id: ctx.state.user.id,
-        billingDay: billingDay
+        id:         ctx.state.user.id,
+        billingDay: billingDay,
       }
     );
     ctx.body = { msg: 'updated' };
   }
 
   static async acceptInvite(ctx) {
-    let user = await User.get(ctx.state.user.id);
+    const user = await User.get(ctx.state.user.id);
 
     [invite] = await global.db.query(
       'Select * From teamInvite Where email = :email and teamID = :teamID limit 1',
       {
-        email: user.email,
-        teamID: ctx.params.teamID
+        email:  user.email,
+        teamID: ctx.params.teamID,
       }
     );
 
@@ -118,15 +118,15 @@ class User {
         'update user set team = :teamID where id = :userID',
         {
           userID: user.id,
-          teamID: ctx.params.teamID
+          teamID: ctx.params.teamID,
         }
       );
 
       await global.db.query(
         'Delete From teamInvite Where email = :email and teamID = :teamID limit 1',
         {
-          email: user.email,
-          teamID: ctx.params.teamID
+          email:  user.email,
+          teamID: ctx.params.teamID,
         }
       );
 
@@ -137,7 +137,7 @@ class User {
   }
 
   static async info(ctx) {
-    let user = await User.get(ctx.state.user.id);
+    const user = await User.get(ctx.state.user.id);
     [user.billing] = await global.db.query(
       'Select * From userBilling Where userID = :id order by id desc limit 1',
       { id: user.id }
@@ -178,14 +178,36 @@ class User {
     const pageText = await pagePromise.text();
     // console.log(pageText);
 
-    const handler = new htmlparser.DefaultHandler(function (error, dom) {
+    const handler = new htmlparser.DefaultHandler(function (error, dom){
       if (error) {
         console.log('err', error);
       } else {
         const rows = dom[1].children[1].children[7].children[7].children[3].children[0].children[0];
-        for (const r of rows) {
-          if (r.name === 'tr') {
 
+        for (const r of rows.children) {
+          if (r.name === 'tr') {
+            let updated = '';
+            let challengeID = 0;
+            const challenge = r.children[0].children[0].data;
+            const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+            if (r.children[2].children) {
+              updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+            }
+            console.log(challenge, completed, updated);
+
+            //from Anna
+            let [chall] = global.db.query('SELECT id FROM challenge WHERE name = :challenge',
+                  { challenge: challenge });
+
+            //if chall is not found/has length insert
+            if(chall.length) {
+              challengeID = chall[0].id;
+              console.log('\nCurrent entry already exists\n');
+            } else {
+              const insChal = global.db.query('INSERT INTO challenge (name) values (:challenge)');
+              console.log('inserted challenge', insChal);
+              process.exit();
+            }
           }
         }
       }
@@ -193,7 +215,7 @@ class User {
     const parser = new htmlparser.Parser(handler);
     parser.parseComplete(pageText);
 
-    ctx.body = {result: 'Data Scraped'};
+    ctx.body = { result: 'Data Scraped' };
   }
 
   static async getMe(ctx) {
@@ -208,8 +230,8 @@ class User {
 
   static async get(id) {
     const user = {
-      info: {},
-      challenges: []
+      info:       {},
+      challenges: [],
     };
     [[user.info]] = await global.db.query(
       `SELECT * 
@@ -234,7 +256,7 @@ class User {
   }
 
   static async getAllAdmin(ctx) {
-    let teamWhere = '';
+    const teamWhere = '';
     if (ctx.state.user.role !== 4) {
       ctx.body = [];
       return;
@@ -243,9 +265,10 @@ class User {
       .query(`SELECT u.id, u.email, u.fname, u.lname, u.role, u.status, u.teamID, t.name as teamName, t.code as code, u.billingDay, u.billingRate, IF(u.customerID, 1, 0) as billable
                                              FROM user u left join team t on u.teamID = t.id
                                             ORDER BY id desc, teamName`);
+    //check
     for (const i in users) {
       const [[b]] = await global.db.query(
-        `SELECT * from userBilling where userID = ? order by id desc limit 1`,
+        'SELECT * from userBilling where userID = ? order by id desc limit 1',
         [users[i].id]
       );
 
@@ -274,7 +297,7 @@ class User {
                                             ${teamWhere}
                                             ORDER BY teamName, lname, fname`);
     let curCode = 'z4rde#'; //Gibberish to avoid ever matching on the first round
-    let outTeams = [];
+    const outTeams = [];
     let curTeam = {};
     users.forEach(user => {
       //console.log(user);
@@ -297,13 +320,13 @@ class User {
   }
 
   static async getTeams(ctx) {
-    const [teams] = await global.db.query(`Select * From team`);
+    const [teams] = await global.db.query('Select * From team');
     ctx.body = teams;
   }
 
   static async getRoles(ctx) {
     const [roles] = await global.db.query(
-      `Select * From userRole order by id asc;`
+      'Select * From userRole order by id asc;'
     );
     ctx.body = roles;
   }
@@ -312,14 +335,14 @@ class User {
     const result = await global.db.query(
       'insert into team (name, maxUsers, status) values (:teamName, 0, 1)',
       {
-        teamName: ctx.request.body.name
+        teamName: ctx.request.body.name,
       }
     );
     const id = result[0].insertId;
     let done = false;
     while (!done) {
       try {
-        let code = makeCode();
+        const code = makeCode();
         const res = await global.db.query(
           'update team set code = :code where id = :id',
           { code: code, id: id }
@@ -345,15 +368,15 @@ class User {
         password = scrypt.kdfSync(ctx.request.body.password, {
           N: 16,
           r: 8,
-          p: 2
+          p: 2,
         });
       }
 
       await global.db.query(
         'update user set password = :password where id = :id',
         {
-          id: ctx.request.body.id,
-          password: password
+          id:       ctx.request.body.id,
+          password: password,
         }
       );
     }
@@ -361,14 +384,14 @@ class User {
     ctx.body = await global.db.query(
       'update user set fname = :fname, lname = :lname, email = :email, billingDay = :billingDay, billingRate = :billingRate, status = :status, role = :role where id = :id',
       {
-        fname: ctx.request.body.fname,
-        lname: ctx.request.body.lname,
-        email: ctx.request.body.email,
-        billingDay: ctx.request.body.billingDay,
+        fname:       ctx.request.body.fname,
+        lname:       ctx.request.body.lname,
+        email:       ctx.request.body.email,
+        billingDay:  ctx.request.body.billingDay,
         billingRate: ctx.request.body.billingRate,
-        status: ctx.request.body.status,
-        role: ctx.request.body.role,
-        id: ctx.request.body.id
+        status:      ctx.request.body.status,
+        role:        ctx.request.body.role,
+        id:          ctx.request.body.id,
       }
     );
   }
@@ -376,18 +399,18 @@ class User {
   static async save(ctx) {
     console.log(ctx.request.body);
     if (ctx.request.body.password && ctx.request.body.password.length > 3) {
-      var newPassword = '';
+      let newPassword = '';
       while (newPassword.length < 10)
-        newPassword = scrypt.kdfSync(ctx.request.body.password, {
+        {newPassword = scrypt.kdfSync(ctx.request.body.password, {
           N: 16,
           r: 8,
-          p: 2
-        });
+          p: 2,
+        });}
       const resultPass = await global.db.query(
         'update user set password = :password where id = :id',
         {
-          id: ctx.request.body.id,
-          password: newPassword
+          id:       ctx.request.body.id,
+          password: newPassword,
         }
       );
       console.log(ctx.request.body.id);
@@ -396,13 +419,13 @@ class User {
     const result = await global.db.query(
       'update user set email = :email, fname = :fname, lname = :lname, role = :role, status = :status, teamID = :teamID where id = :id',
       {
-        id: ctx.params.userID,
-        email: ctx.request.body.email,
-        fname: ctx.request.body.fname,
-        lname: ctx.request.body.lname,
-        role: ctx.request.body.role,
+        id:     ctx.params.userID,
+        email:  ctx.request.body.email,
+        fname:  ctx.request.body.fname,
+        lname:  ctx.request.body.lname,
+        role:   ctx.request.body.role,
         status: ctx.request.body.status,
-        teamID: ctx.request.body.teamID
+        teamID: ctx.request.body.teamID,
       }
     );
     ctx.body = result;
@@ -410,7 +433,7 @@ class User {
 
   static async deleteUser(ctx) {
     const result = await global.db.query('delete from user where id = :id', {
-      id: ctx.params.userID
+      id: ctx.params.userID,
     });
     ctx.body = result;
   }
@@ -436,10 +459,10 @@ class User {
   }
 
   static async addToken(userID, refreshToken) {
-    const sql = `insert into userToken (userID, refreshToken) values (:userID, :refreshToken)`;
+    const sql = 'insert into userToken (userID, refreshToken) values (:userID, :refreshToken)';
     const ret = await global.db.query(sql, {
-      userID: userID,
-      refreshToken: refreshToken
+      userID:       userID,
+      refreshToken: refreshToken,
     });
     return ret;
   }
@@ -451,7 +474,7 @@ class User {
                   Where u.id in (select userID from userToken where refreshToken = :token)`;
     const [users] = await global.db.query(sql, { token: token });
 
-    const sql2 = `delete from userToken where refreshToken = :token`; //This token has been used, remove it.
+    const sql2 = 'delete from userToken where refreshToken = :token'; //This token has been used, remove it.
     const res = await global.db.query(sql2, { token: token });
 
     return users;
@@ -462,45 +485,45 @@ class User {
 
     try {
       if (ctx.request.body.teamID) {
-        const sql = `select teamID from teamInvite where email=:email and teamID = :teamID`;
-        let [[res]] = await global.db.query(sql, {
-          email: ctx.request.body.email,
-          teamID: ctx.request.body.teamID
+        const sql = 'select teamID from teamInvite where email=:email and teamID = :teamID';
+        const [[res]] = await global.db.query(sql, {
+          email:  ctx.request.body.email,
+          teamID: ctx.request.body.teamID,
         });
 
         if (res) {
-          const sql = `delete from teamInvite where email=:email`;
+          const sql = 'delete from teamInvite where email=:email';
           await global.db.query(sql, {
-            email: ctx.request.body.email
+            email: ctx.request.body.email,
           });
         } else {
           ctx.status = 401;
           return;
         }
       } else {
-        const sql = `update teamInvite set declined = 1 where email=:email`;
+        const sql = 'update teamInvite set declined = 1 where email=:email';
         await global.db.query(sql, {
-          email: ctx.request.body.email
+          email: ctx.request.body.email,
         });
       }
 
-      var newPassword = '';
+      let newPassword = '';
       while (newPassword.length < 10)
-        newPassword = scrypt.kdfSync(ctx.request.body.password, {
+        {newPassword = scrypt.kdfSync(ctx.request.body.password, {
           N: 16,
           r: 8,
-          p: 2
-        });
+          p: 2,
+        });}
       [result] = await global.db.query(
-        `insert into user (fname, lname, email, password, teamID, role, status) values (:fname, :lname, :email, :password, :teamID, :role, :status)`,
+        'insert into user (fname, lname, email, password, teamID, role, status) values (:fname, :lname, :email, :password, :teamID, :role, :status)',
         {
-          fname: ctx.request.body.fname,
-          lname: ctx.request.body.lname,
-          email: ctx.request.body.email,
+          fname:    ctx.request.body.fname,
+          lname:    ctx.request.body.lname,
+          email:    ctx.request.body.email,
           password: newPassword,
-          teamID: ctx.request.body.teamID,
-          role: 1,
-          status: 1
+          teamID:   ctx.request.body.teamID,
+          role:     1,
+          status:   1,
         }
       );
     } catch (e) {
@@ -575,11 +598,11 @@ class User {
 
 }
 
-let makeCode = function() {
-  var text = '';
-  var possible = 'BCDFGHJKLMNPQRSTVWXYZ0123456789';
-  for (var i = 0; i < 6; i++)
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+const makeCode = function() {
+  let text = '';
+  const possible = 'BCDFGHJKLMNPQRSTVWXYZ0123456789';
+  for (let i = 0; i < 6; i++)
+    {text += possible.charAt(Math.floor(Math.random() * possible.length));}
 
   return text;
 };
@@ -587,24 +610,24 @@ let makeCode = function() {
 async function teamSecurity(user, teamID) {
   return true;
 
-  let sqla = `select * from teamManager where teamID = :teamID and userID = :userID`;
+  const sqla = 'select * from teamManager where teamID = :teamID and userID = :userID';
   const [[manager]] = await global.db.query(sqla, {
     teamID: teamID,
-    userID: user.id
+    userID: user.id,
   });
   if (user.role < 4 && !manager) return false;
   return true;
 }
 
 async function findSubTeams(teamID) {
-  let outTeam = [];
-  let sql = 'select id from team where upline = :teamID';
+  const outTeam = [];
+  const sql = 'select id from team where upline = :teamID';
   let [teams] = await global.db.query(sql, { teamID: teamID });
   if (teams.length) {
-    for (let t of teams) {
+    for (const t of teams) {
       outTeam.push(t.id);
-      let subTeams = await findSubTeams(t.id);
-      for (let s of subTeams) {
+      const subTeams = await findSubTeams(t.id);
+      for (const s of subTeams) {
         outTeam.push(s.id);
       }
       if (subTeams) teams = teams.concat(subTeams);
