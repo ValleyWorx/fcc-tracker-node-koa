@@ -23,11 +23,11 @@ const app = new Koa();
 
 // MySQL connection pool (set up on app initialisation)
 const config = {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
+  host:     process.env.DB_HOST,
+  port:     process.env.DB_PORT,
+  user:     process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE
+  database: process.env.DB_DATABASE,
 };
 
 global.connectionPool = mysql.createPool(config); // put in global to pass to sub-apps
@@ -115,20 +115,20 @@ app.use(async function mysqlConnection(ctx, next) {
 
 // logging
 const access = {
-  type: 'rotating-file',
-  path: './logs/api-access.log',
-  level: 'trace',
+  type:   'rotating-file',
+  path:   './logs/api-access.log',
+  level:  'trace',
   period: '1d',
-  count: 4
+  count:  4,
 };
 const error = {
-  type: 'rotating-file',
-  path: './logs/api-error.log',
-  level: 'error',
+  type:   'rotating-file',
+  path:   './logs/api-error.log',
+  level:  'error',
   period: '1d',
-  count: 4
+  count:  4,
 };
-const logger = bunyan.createLogger({ name: 'api', streams: [access, error] });
+const logger = bunyan.createLogger({ name: 'api', streams: [ access, error ] });
 app.use(koaLogger(logger, {}));
 
 // ------------ routing
@@ -142,7 +142,7 @@ app.use(require('./routes/routes-auth.js'));
 
 app.use(async function verifyJwt(ctx, next) {
   if (!ctx.header.authorization) ctx.throw(401, 'Authorisation required');
-  const [scheme, token] = ctx.header.authorization.split(' ');
+  const [ scheme, token ] = ctx.header.authorization.split(' ');
   if (scheme != 'Bearer') ctx.throw(401, 'Invalid authorisation');
 
   try {
@@ -153,7 +153,7 @@ app.use(async function verifyJwt(ctx, next) {
     const [[res]] = await global.db.query(sqla);
 
     if (res.status === 0){
-      throw({status: 401, message: "Account Disabled"});
+      throw({ status: 401, message: 'Account Disabled' });
     }
 
     ctx.state.user = payload; // for user id  to look up user details
@@ -170,11 +170,11 @@ app.use(require('./routes/routes-user.js'));
 app.use(require('./routes/routes-team.js'));
 app.use(require('./routes/routes-geo.js'));
 
-app.use(function *(){
+/*app.use(function *(){
   this.body = 'Invalid URL!!!';
   // or redirect etc
   // this.redirect('/someotherspot');
-});
+});*/
 
 /* create server - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 

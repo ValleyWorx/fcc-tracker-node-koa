@@ -38,7 +38,7 @@ class User {
           Buffer.from(user.password, 'base64'),
           ctx.request.body.password
         );
-        //console.log('test', match);
+
         if (!match) ctx.throw(401, 'Username/password not found.');
       } catch (e) {
         // e.g. "data is not a valid scrypt-encrypted block"
@@ -165,6 +165,148 @@ class User {
     ctx.body = user;
   }
 
+  //Stashed Changes <
+  //processes the user's challenges
+  static async processChallenges(userID, rows){
+
+    const tableName = 'challenge';
+    for (const r of rows.children) {
+      if (r.name === 'tr') {
+        let updated = null;
+        let challengeID =0;
+        const challenge = r.children[0].children[0].data;
+        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+        if(r.children[2].children){
+          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+        }
+        console.log(challenge,completed,updated);
+
+        //go into db and take c.id that = challenge
+        const [chall] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :challenge`, { challenge: challenge });
+
+        //  if chall is not found/has length insert
+        if(chall.length) {
+          challengeID = chall[0].id;
+        } else {
+          const [insChal] = await global.db.query('INSERT INTO challenge (name) values (:challenge)', { challenge: challenge });
+          challengeID = insChal.insertId;
+        }
+
+        global.db.query(
+          'INSERT INTO userChallenge(userID, challengeID, completed, updated)' +
+          'VALUES (:userID, :challengeID, :completed, :updated)',
+          { userID: userID, challengeID: challengeID, completed: completed, updated: updated });
+
+      }
+    }
+  }
+    //processes the user's projects
+  static async processProjects(userID, rows){
+
+    const tableName = 'project';
+    for (const r of rows.children) {
+      if (r.name === 'tr') {
+        let updated = null;
+        let projectID =0;
+        const project = r.children[0].children[0].children[0].data;
+        console.log(project);
+        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+        if(r.children[2].children){
+          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+        }
+        console.log(project,completed,updated);
+        
+        const [proj] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :project`, { project: project });
+
+                //  if proj is not found/has length insert
+        if(proj.length) {
+          projectID = proj[0].id;
+        } else {
+          const [insProj] = await global.db.query(`INSERT INTO ${tableName} (name) values (:project)`, { project: project });
+          projectID = insProj.insertId;
+        }
+
+        global.db.query(
+                    'INSERT INTO userProject(userID, projectID, completed, updated)' +
+                    'VALUES (:userID, :projectID, :completed, :updated)',
+                    { userID: userID, projectID: projectID, completed: completed, updated: updated });
+
+      }
+    }
+  }
+    //processes the user's algorithms
+  static async processAlgorithms(userID, rows){
+
+    const tableName = 'algorithm';
+    for (const r of rows.children) {
+      if (r.name === 'tr') {
+        let updated = null;
+        let algorithmID =0;
+        const algorithm = r.children[0].children[0].data;
+        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+        if(r.children[2].children){
+          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+        }
+        console.log(algorithm,completed,updated);
+
+                //go into db and take c.id that = algorithm
+        const [algor] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :algorithm`, { algorithm: algorithm });
+
+                //  if algor is not found/has length insert
+        if(algor.length) {
+          algorithmID = algor[0].id;
+        } else {
+          const [insAlg] = await global.db.query('INSERT INTO algorithm (name) values (:algorithm)', { algorithm: algorithm });
+          algorithmID = insAlg.insertId;
+        }
+
+        global.db.query(
+                    'INSERT INTO userAlgorithm(userID, algorithmID, completed, updated)' +
+                    'VALUES (:userID, :algorithmID, :completed, :updated)',
+                    { userID: userID, algorithmID: algorithmID, completed: completed, updated: updated });
+
+      }
+    }
+  }
+    //processes the user's type
+    //keep processType and processProject
+  static async processType(tableType, userID, rows){
+
+    const tableName = tableType;
+    for (const r of rows.children) {
+      if (r.name === 'tr') {
+        let updated = null;
+        let typeID =0;
+        const type = r.children[0].children[0].data;
+        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+        if(r.children[2].children){
+          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+        }
+        console.log(type,completed,updated);
+
+                //go into db and take c.id that = type
+        const [dbType] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :type`,
+            { type: type });
+
+                //  if dbType is not found/has length insert
+        if(dbType.length) {
+          typeID = dbType[0].id;
+        } else {
+          const [insType] = await global.db.query(`INSERT INTO ${tableName} (name) values (:type)`,
+              { type: type });
+          typeID = insType.insertId;
+        }
+
+        global.db.query(
+                    'INSERT INTO userType(userID, typeID, completed, updated)' +
+                    'VALUES (:userID, :typeID, :completed, :updated)',
+                    { userID: userID, typeID: typeID, completed: completed, updated: updated });
+
+      }
+    }
+  }
+// > Stashed changes
+
   static async scrape(ctx){
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
@@ -182,6 +324,7 @@ class User {
       if (error) {
         console.log('err', error);
       } else {
+//Stashed Changes <
         const rows = dom[1].children[1].children[7].children[7].children[3].children[0].children[0];
 
         for (const r of rows.children) {
@@ -208,6 +351,25 @@ class User {
               console.log('inserted challenge', insChal);
               process.exit();
             }
+
+        const rows = dom[1].children[1].children[7].children[7].children[3];
+        for (const i in rows.children){ //Loop through all of the sections here
+          const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
+          const tableType = thSpot.data;
+          switch (tableType){
+            case 'Challenges':
+              await User.processChallenges(userID, rows.children[i].children[0]);
+              break;
+            case 'Projects':
+              await User.processProjects(userID, rows.children[i].children[0]);
+              break;
+            case 'Algorithms':
+              await User.processAlgorithms(userID, rows.children[i].children[0]);
+              break;
+            case 'Type':
+              await User.processType(tableType, userID, rows.children[i].children[0]);
+              break;
+// > Stashed changes
           }
         }
       }
