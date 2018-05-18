@@ -19,9 +19,9 @@ class User {
 
   static async getAuth(ctx) {
     let body = {};
-    if (ctx.request.body.password === undefined){
+    if (ctx.request.body.password === undefined) {
       body = JSON.parse(ctx.request.body);
-    }else{
+    } else {
       body = ctx.request.body;
     }
 
@@ -92,7 +92,7 @@ class User {
     await global.db.query('update user set status = 0 where id = :id', {
       id: ctx.state.user.id
     });
-    ctx.body = { msg: 'updated' };
+    ctx.body = {msg: 'updated'};
   }
 
   static async reactivate(ctx) {
@@ -106,7 +106,7 @@ class User {
         billingDay: billingDay
       }
     );
-    ctx.body = { msg: 'updated' };
+    ctx.body = {msg: 'updated'};
   }
 
   static async acceptInvite(ctx) {
@@ -137,9 +137,9 @@ class User {
         }
       );
 
-      ctx.body = { message: 'user added to team.', teamID: teamID };
+      ctx.body = {message: 'user added to team.', teamID: teamID};
     } else {
-      ctx.body = { message: 'user not added to team.', teamID: 0 };
+      ctx.body = {message: 'user not added to team.', teamID: 0};
     }
   }
 
@@ -147,7 +147,7 @@ class User {
     let user = await User.get(ctx.state.user.id);
     [user.billing] = await global.db.query(
       'Select * From userBilling Where userID = :id order by id desc limit 1',
-      { id: user.id }
+      {id: user.id}
     );
 
     const now = moment();
@@ -172,25 +172,25 @@ class User {
     ctx.body = user;
   }
 
-  static async processChallenges(userID, rows){
+  static async processChallenges(userID, rows) {
 
     const tableName = 'challenge';
     for (const r of rows.children) {
       if (r.name === 'tr') {
         let updated = null;
-        let challengeID =0;
+        let challengeID = 0;
         const challenge = r.children[0].children[0].data;
         const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
-        if(r.children[2].children){
+        if (r.children[2].children) {
           updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
         }
-        console.log(challenge,completed,updated);
+        console.log(challenge, completed, updated);
 
         //go into db and take c.id that = challenge
         const [chall] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :challenge`, {challenge: challenge});
 
         //  if chall is not found/has length insert
-        if(chall.length) {
+        if (chall.length) {
           challengeID = chall[0].id;
         } else {
           const [insChal] = await global.db.query('INSERT INTO challenge (name) values (:challenge)', {challenge: challenge});
@@ -201,92 +201,92 @@ class User {
           `INSERT INTO userChallenge(userID, challengeID, completed, updated)
            VALUES (:userID, :challengeID, :completed, :updated)
            ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
-          { userID: userID, challengeID: challengeID, completed: completed, updated: updated });
+          {userID: userID, challengeID: challengeID, completed: completed, updated: updated});
 
       }
     }
 
   }
-    static async processAlgorithms(userID, rows){
 
-        const tableName = 'algorithm';
-        for (const r of rows.children) {
-            if (r.name === 'tr') {
-                let updated = null;
-                let algorithmID =0;
-                const algorithm = r.children[0].children[0].data;
-                const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
-                if(r.children[2].children){
-                    updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
-                }
-                console.log(algorithm,completed,updated);
+  static async processAlgorithms(userID, rows) {
 
-                //go into db and take c.id that = algorithms
-                const [algor] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :algorithm`, {algorithm: algorithm});
+    const tableName = 'algorithm';
+    for (const r of rows.children) {
+      if (r.name === 'tr') {
+        let updated = null;
+        let algorithmID = 0;
+        const algorithm = r.children[0].children[0].data;
+        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+        if (r.children[2].children) {
+          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+        }
+        console.log(algorithm, completed, updated);
 
-                //  if algor is not found/has length insert
-                if(algor.length) {
-                    algorithmID = algor[0].id;
-                } else {
-                    const [insAlg] = await global.db.query('INSERT INTO algorithm (name) values (:algorithm)', {algorithm: algorithm});
-                    algorithmID = insAlg.insertId;
-                }
+        //go into db and take c.id that = algorithms
+        const [algor] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :algorithm`, {algorithm: algorithm});
 
-                global.db.query(
-                    `INSERT INTO useralgorithm(userID, algorithmID, completed, updated)
+        //  if algor is not found/has length insert
+        if (algor.length) {
+          algorithmID = algor[0].id;
+        } else {
+          const [insAlg] = await global.db.query('INSERT INTO algorithm (name) values (:algorithm)', {algorithm: algorithm});
+          algorithmID = insAlg.insertId;
+        }
+
+        global.db.query(
+          `INSERT INTO useralgorithm(userID, algorithmID, completed, updated)
                     VALUES (:userID, :algorithmID, :completed, :updated)
                     ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
-                    { userID: userID, algorithmID: algorithmID, completed: completed, updated: updated });
+          {userID: userID, algorithmID: algorithmID, completed: completed, updated: updated});
 
-            }
+      }
+    }
+
+  }
+
+  static async processProjects(userID, rows) {
+
+    const tableName = 'project';
+    for (const r of rows.children) {
+      if (r.name === 'tr') {
+        let updated = null;
+        let projectID = 0;
+        const project = r.children[0].children[0].children[0].data;
+        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+        if (r.children[2].children) {
+          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+        }
+        console.log(project, completed, updated);
+
+        //go into db and take c.id that = projenge
+        const [proj] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :project`, {project: project});
+
+        //  if proj is not found/has length insert
+        if (proj.length) {
+          projectID = proj[0].id;
+        } else {
+          const [insProj] = await global.db.query('INSERT INTO project (name) values (:project)', {project: project});
+          projectID = insProj.insertId;
         }
 
-    }
-    static async processProjects(userID, rows){
-
-        const tableName = 'project';
-        for (const r of rows.children) {
-            if (r.name === 'tr') {
-                let updated = null;
-                let projectID =0;
-                const project = r.children[0].children[0].children[0].data;
-                const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
-                if(r.children[2].children){
-                    updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
-                }
-                console.log(project,completed,updated);
-
-                //go into db and take c.id that = projenge
-                const [proj] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :project`, {project: project});
-
-                //  if proj is not found/has length insert
-                if(proj.length) {
-                    projectID = proj[0].id;
-                } else {
-                    const [insProj] = await global.db.query('INSERT INTO project (name) values (:project)', {project: project});
-                    projectID = insProj.insertId;
-                }
-
-                global.db.query(
-                    `INSERT INTO userProject(userID, projectID, completed, updated)
+        global.db.query(
+          `INSERT INTO userProject(userID, projectID, completed, updated)
                     VALUES (:userID, :projectID, :completed, :updated)
                     ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
-                    { userID: userID, projectID: projectID, completed: completed, updated: updated });
+          {userID: userID, projectID: projectID, completed: completed, updated: updated});
 
-            }
-        }
-
+      }
     }
 
+  }
 
-
-    static async scrape(ctx){
+  static async scrape(ctx) {
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
       `SELECT * 
         FROM user 
         WHERE id = :id`,
-      { id: userID }
+      {id: userID}
     );
 
     const pagePromise = await fetch(`https://www.freecodecamp.org/${user.fccCode}`);
@@ -298,18 +298,21 @@ class User {
         console.log('err', error);
       } else {
         const rows = dom[1].children[1].children[7].children[7].children[3];
-        for (let i in rows.children){ //Loop through all of the sections here
+        for (let i in rows.children) { //Loop through all of the sections here
           const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
           const tableType = thSpot.data;
-          switch (tableType){
+          switch (tableType) {
             case 'Challenges':
+              console.log("scraping challenges");
               await User.processChallenges(userID, rows.children[i].children[0]);
               break;
-              case 'Algorithms':
-                await User.processAlgorithms(userID, rows.children[i].children[0]);
-                break;
-              case 'Projects':
-                await User.processProjects(userID, rows.children[i].children[0]);
+            case 'Algorithms':
+              console.log("scraping algorithms");
+              await User.processAlgorithms(userID, rows.children[i].children[0]);
+              break;
+            case 'Projects':
+              console.log("scraping projects");
+              await User.processProjects(userID, rows.children[i].children[0]);
           }
         }
       }
@@ -339,7 +342,7 @@ class User {
       `SELECT * 
         FROM user 
         WHERE id = :id`,
-      { id }
+      {id}
     );
     user.info.password = null;
 
@@ -348,7 +351,7 @@ class User {
         FROM userChallenge AS uc, challenge AS c
         WHERE uc.userID = :id
           AND uc.challengeID = c.id`,
-      { id }
+      {id}
     );
 
     user.challengeCount = user.challenges.length;
@@ -376,7 +379,7 @@ class User {
       if (b) {
         users[i].lastBilling = `${b.billingRate} on ${b.billingMonth}/${
           b.billingDay
-        }`;
+          }`;
       } else {
         users[i].lastBilling = '';
       }
@@ -446,7 +449,7 @@ class User {
         let code = makeCode();
         const res = await global.db.query(
           'update team set code = :code where id = :id',
-          { code: code, id: id }
+          {code: code, id: id}
         );
         done = true;
       } catch (e) {
@@ -545,7 +548,7 @@ class User {
                      From user u 
                     Where u.${field} = :${field} 
                     Order By u.fname, u.lname`;
-      const [users] = await global.db.query(sql, { [field]: value });
+      const [users] = await global.db.query(sql, {[field]: value});
 
       return users;
     } catch (e) {
@@ -573,10 +576,10 @@ class User {
                      From user u 
                           left outer join team t on u.teamID = t.id
                   Where u.id in (select userID from userToken where refreshToken = :token)`;
-    const [users] = await global.db.query(sql, { token: token });
+    const [users] = await global.db.query(sql, {token: token});
 
     const sql2 = `delete from userToken where refreshToken = :token`; //This token has been used, remove it.
-    const res = await global.db.query(sql2, { token: token });
+    const res = await global.db.query(sql2, {token: token});
 
     return users;
   }
@@ -586,9 +589,9 @@ class User {
 
     try {
       let body = {};
-      if (ctx.request.body.password === undefined){
+      if (ctx.request.body.password === undefined) {
         body = JSON.parse(ctx.request.body);
-      }else{
+      } else {
         body = ctx.request.body;
       }
 
@@ -614,7 +617,7 @@ class User {
       );
     } catch (e) {
       console.log('error', e);
-      result = { error: 1 };
+      result = {error: 1};
     }
 
     ctx.body = result;
@@ -625,13 +628,13 @@ class User {
     try {
       [result] = await global.db.query(
         'select id, name from team where code = :code',
-        { code: ctx.params.code }
+        {code: ctx.params.code}
       );
     } catch (e) {
-      result = [{ id: 0 }];
+      result = [{id: 0}];
     }
     if (!result[0]) {
-      result = [{ id: 0 }];
+      result = [{id: 0}];
     }
     ctx.body = result[0]; //Return only the ID
   }
@@ -645,19 +648,19 @@ class User {
     try {
       [[team]] = await global.db.query(
         'select id, name from team where id = (select teamId from teamInvite where email = :email)',
-        { email: ctx.request.body.email }
+        {email: ctx.request.body.email}
       );
 
       // If there's a team ID...
       if (team.id) {
         // return the team name
-        result = { name: team.name, id: team.id };
+        result = {name: team.name, id: team.id};
       } else {
         // Else, return null
-        result = { name: null, id: null };
+        result = {name: null, id: null};
       }
     } catch (e) {
-      result = { name: null, id: null };
+      result = {name: null, id: null};
     }
 
     // Set the response body
@@ -670,21 +673,21 @@ class User {
     try {
       [[result]] = await global.db.query(
         'select id from user where email = :email',
-        { email: ctx.request.body.email }
+        {email: ctx.request.body.email}
       );
     } catch (e) {
       console.log('testEmail error', e);
-      result = { id: 0 };
+      result = {id: 0};
     }
     if (!result) {
-      result = { id: 0 };
+      result = {id: 0};
     }
     ctx.body = result; //Return only the ID
   }
 
 }
 
-let makeCode = function() {
+let makeCode = function () {
   var text = '';
   var possible = 'BCDFGHJKLMNPQRSTVWXYZ0123456789';
   for (var i = 0; i < 6; i++)
@@ -708,7 +711,7 @@ async function teamSecurity(user, teamID) {
 async function findSubTeams(teamID) {
   let outTeam = [];
   let sql = 'select id from team where upline = :teamID';
-  let [teams] = await global.db.query(sql, { teamID: teamID });
+  let [teams] = await global.db.query(sql, {teamID: teamID});
   if (teams.length) {
     for (let t of teams) {
       outTeam.push(t.id);
