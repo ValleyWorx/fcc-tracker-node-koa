@@ -324,13 +324,13 @@ class User {
         from   challenge a left outer join userChallenge b
         on a.id = b.challengeID and b.userID = :id
         union
-        select 'Algorithms', count(a.\`id\`), count(b.userID) 
+        select 'Algorithms', count(a.id), count(b.userID) 
         from   algorithm a left outer join userAlgorithm b
-        on a.id = b.\`algorithmID\` and b.userID = :id
+        on a.id = b.algorithmID and b.userID = :id
         union
-        select 'Projects', count(a.\`id\`), count(b.userID) 
+        select 'Projects', count(a.id), count(b.userID) 
         from   project a left outer join userProject b
-        on a.id = b.\`projectID\` and b.userID = "id`,
+        on a.id = b.projectID and b.userID = :id`,
           {id: userID}
       );
 
