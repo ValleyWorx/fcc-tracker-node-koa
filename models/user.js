@@ -193,8 +193,9 @@ class User {
         }
 
         global.db.query(
-          'INSERT INTO userChallenge(userID, challengeID, completed, updated)' +
-          'VALUES (:userID, :challengeID, :completed, :updated)',
+          `INSERT INTO userChallenge(userID, challengeID, completed, updated)
+           VALUES (:userID, :challengeID, :completed, :updated)
+           ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
           { userID: userID, challengeID: challengeID, completed: completed, updated: updated });
 
       }
@@ -277,6 +278,12 @@ class User {
       if (r.name === 'tr') {
         let updated = null;
         let typeID =0;
+        /*let type = null;
+        if (tableName === 'project'){
+          type = r.children[0].children[0].children[0].data;
+        } else {
+          type = r.children[0].children[0].data;
+        }*/
         const type = r.children[0].children[0].data;
         const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
         if(r.children[2].children){
@@ -320,7 +327,7 @@ class User {
     const pageText = await pagePromise.text();
     // console.log(pageText);
 
-    const handler = new htmlparser.DefaultHandler(function (error, dom){
+    const handler = new htmlparser.DefaultHandler(async function (error, dom) {
       if (error) {
         console.log('err', error);
       } else {
@@ -338,12 +345,12 @@ class User {
             }
             console.log(challenge, completed, updated);
 
-            //from Anna
-            let [chall] = global.db.query('SELECT id FROM challenge WHERE name = :challenge',
-                  { challenge: challenge });
+                    //from Anna
+            const [chall] = global.db.query('SELECT id FROM challenge WHERE name = :challenge',
+                        { challenge: challenge });
 
-            //if chall is not found/has length insert
-            if(chall.length) {
+                    //if chall is not found/has length insert
+            if (chall.length) {
               challengeID = chall[0].id;
               console.log('\nCurrent entry already exists\n');
             } else {
@@ -352,24 +359,26 @@ class User {
               process.exit();
             }
 
-        const rows = dom[1].children[1].children[7].children[7].children[3];
-        for (const i in rows.children){ //Loop through all of the sections here
-          const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
-          const tableType = thSpot.data;
-          switch (tableType){
-            case 'Challenges':
-              await User.processChallenges(userID, rows.children[i].children[0]);
-              break;
-            case 'Projects':
-              await User.processProjects(userID, rows.children[i].children[0]);
-              break;
-            case 'Algorithms':
-              await User.processAlgorithms(userID, rows.children[i].children[0]);
-              break;
-            case 'Type':
-              await User.processType(tableType, userID, rows.children[i].children[0]);
-              break;
+            const rows = dom[1].children[1].children[7].children[7].children[3];
+            for (const i in rows.children) { //Loop through all of the sections here
+              const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
+              const tableType = thSpot.data;
+              switch (tableType) {
+                case 'Challenges':
+                  await User.processChallenges(userID, rows.children[i].children[0]);
+                  break;
+                case 'Projects':
+                  await User.processProjects(userID, rows.children[i].children[0]);
+                  break;
+                case 'Algorithms':
+                  await User.processAlgorithms(userID, rows.children[i].children[0]);
+                  break;
+                case 'Type':
+                  await User.processType(tableType, userID, rows.children[i].children[0]);
+                  break;
 // > Stashed changes
+              }
+            }
           }
         }
       }
