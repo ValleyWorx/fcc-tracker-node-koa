@@ -232,9 +232,9 @@ class User {
           const [insAlg] = await global.db.query('INSERT INTO algorithm (name) values (:algorithm)', {algorithm: algorithm});
           algorithmID = insAlg.insertId;
         }
-
+        console.log('>>>>>>>>>> adding algorithm');
         global.db.query(
-          `INSERT INTO useralgorithm(userID, algorithmID, completed, updated)
+          `INSERT INTO userAlgorithm(userID, algorithmID, completed, updated)
                     VALUES (:userID, :algorithmID, :completed, :updated)
                     ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
           {userID: userID, algorithmID: algorithmID, completed: completed, updated: updated});
