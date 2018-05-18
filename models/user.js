@@ -501,29 +501,6 @@ class User {
 
     try {
       console.log('body', ctx.request.body);
-      if (ctx.request.body.teamID) {
-        const sql = `select teamID from teamInvite where email=:email and teamID = :teamID`;
-        let [[res]] = await global.db.query(sql, {
-          email: ctx.request.body.email,
-          teamID: ctx.request.body.teamID
-        });
-
-        if (res) {
-          const sql = `delete from teamInvite where email=:email`;
-          await global.db.query(sql, {
-            email: ctx.request.body.email
-          });
-        } else {
-          ctx.status = 401;
-          return;
-        }
-      } else {
-        const sql = `update teamInvite set declined = 1 where email=:email`;
-        await global.db.query(sql, {
-          email: ctx.request.body.email
-        });
-      }
-
       var newPassword = '';
       while (newPassword.length < 10)
         newPassword = scrypt.kdfSync(ctx.request.body.password, {
