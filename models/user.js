@@ -516,19 +516,20 @@ class User {
           p: 2
         });
       [result] = await global.db.query(
-        `insert into user (fname, lname, email, password, teamID, role, status) values (:fname, :lname, :email, :password, :teamID, :role, :status)`,
+        `insert into user (fname, lname, email, password, fccCode, role, status) values (:fname, :lname, :email, :password, :fccCode, :role, :status)`,
         {
           fname: body.fname,
           lname: body.lname,
           email: body.email,
           password: newPassword,
+          fccCode: body.fccCode,
           role: 1,
           status: 1
         }
       );
     } catch (e) {
       console.log('error', e);
-      result = [{ error: 1 }];
+      result = { error: 1 };
     }
 
     ctx.body = result;
