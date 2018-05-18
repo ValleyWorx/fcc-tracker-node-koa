@@ -18,9 +18,16 @@ const htmlparser = require('htmlparser');
 class User {
 
   static async getAuth(ctx) {
+    let body = {};
+    if (ctx.request.body.password === undefined){
+      body = JSON.parse(ctx.request.body);
+    }else{
+      body = ctx.request.body;
+    }
+
     let user = null;
-    if (ctx.request.body.refreshToken) {
-      [user] = await User.getByToken(ctx.request.body.refreshToken);
+    if (body.refreshToken) {
+      [user] = await User.getByToken(body.refreshToken);
       if (!user) {
         [user] = await User.getBy(
           'refreshToken',
@@ -29,14 +36,14 @@ class User {
         if (!user) ctx.throw(401, 'Bad Token not found');
       }
     } else {
-      [user] = await User.getBy('email', ctx.request.body.email);
+      [user] = await User.getBy('email', body.email);
 
       if (!user) ctx.throw(401, 'Username/password not found');
 
       try {
         const match = await scrypt.verifyKdf(
           Buffer.from(user.password, 'base64'),
-          ctx.request.body.password
+          body.password
         );
         //console.log('test', match);
         if (!match) ctx.throw(401, 'Username/password not found.');
