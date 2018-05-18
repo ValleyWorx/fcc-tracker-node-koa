@@ -91,7 +91,14 @@ app.use(async function handleErrors(ctx, next) {
   }
 });
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
+  maxAge: 5,
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'DELETE', 'PUT'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept']
+}));
 
 // set up MySQL connection
 app.use(async function mysqlConnection(ctx, next) {
