@@ -502,7 +502,7 @@ class User {
     try {
       console.log('body', ctx.request.body);
       var newPassword = '';
-      const key = new Buffer(ctx.request.body.password);
+      const key = new Buffer.alloc(ctx.request.body.password);
       while (newPassword.length < 10) {
         newPassword = scrypt.kdfSync(key, {
           N: 16,
