@@ -18,9 +18,16 @@ const htmlparser = require('htmlparser');
 class User {
 
   static async getAuth(ctx) {
+    let body = {};
+    if (ctx.request.body.password === undefined){
+      body = JSON.parse(ctx.request.body);
+    }else{
+      body = ctx.request.body;
+    }
+
     let user = null;
-    if (ctx.request.body.refreshToken) {
-      [user] = await User.getByToken(ctx.request.body.refreshToken);
+    if (body.refreshToken) {
+      [user] = await User.getByToken(body.refreshToken);
       if (!user) {
         [user] = await User.getBy(
           'refreshToken',
@@ -29,14 +36,14 @@ class User {
         if (!user) ctx.throw(401, 'Bad Token not found');
       }
     } else {
-      [user] = await User.getBy('email', ctx.request.body.email);
+      [user] = await User.getBy('email', body.email);
 
       if (!user) ctx.throw(401, 'Username/password not found');
 
       try {
         const match = await scrypt.verifyKdf(
           Buffer.from(user.password, 'base64'),
-          ctx.request.body.password
+          body.password
         );
         //console.log('test', match);
         if (!match) ctx.throw(401, 'Username/password not found.');
@@ -578,54 +585,39 @@ class User {
     let result;
 
     try {
-      if (ctx.request.body.teamID) {
-        const sql = `select teamID from teamInvite where email=:email and teamID = :teamID`;
-        let [[res]] = await global.db.query(sql, {
-          email: ctx.request.body.email,
-          teamID: ctx.request.body.teamID
-        });
-
-        if (res) {
-          const sql = `delete from teamInvite where email=:email`;
-          await global.db.query(sql, {
-            email: ctx.request.body.email
-          });
-        } else {
-          ctx.status = 401;
-          return;
-        }
-      } else {
-        const sql = `update teamInvite set declined = 1 where email=:email`;
-        await global.db.query(sql, {
-          email: ctx.request.body.email
-        });
+      let body = {};
+      if (ctx.request.body.password === undefined){
+        body = JSON.parse(ctx.request.body);
+      }else{
+        body = ctx.request.body;
       }
 
+      console.log('body', body);
       var newPassword = '';
       while (newPassword.length < 10)
-        newPassword = scrypt.kdfSync(ctx.request.body.password, {
+        newPassword = scrypt.kdfSync(body.password, {
           N: 16,
           r: 8,
           p: 2
         });
       [result] = await global.db.query(
-        `insert into user (fname, lname, email, password, teamID, role, status) values (:fname, :lname, :email, :password, :teamID, :role, :status)`,
+        `insert into user (fname, lname, email, password, fccCode, role, status) values (:fname, :lname, :email, :password, :fccCode, :role, :status)`,
         {
-          fname: ctx.request.body.fname,
-          lname: ctx.request.body.lname,
-          email: ctx.request.body.email,
+          fname: body.fname,
+          lname: body.lname,
+          email: body.email,
           password: newPassword,
-          teamID: ctx.request.body.teamID,
+          fccCode: body.fccCode,
           role: 1,
           status: 1
         }
       );
     } catch (e) {
       console.log('error', e);
-      result = [{ error: 1 }];
+      result = { error: 1 };
     }
 
-    ctx.body = result.insertId;
+    ctx.body = result;
   }
 
   static async validateCode(ctx) {
