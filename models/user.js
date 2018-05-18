@@ -500,6 +500,7 @@ class User {
     let result;
 
     try {
+      console.log('body', ctx.request.body);
       if (ctx.request.body.teamID) {
         const sql = `select teamID from teamInvite where email=:email and teamID = :teamID`;
         let [[res]] = await global.db.query(sql, {
