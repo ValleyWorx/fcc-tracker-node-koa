@@ -191,16 +191,89 @@ class User {
         }
 
         global.db.query(
-          'INSERT INTO userChallenge(userID, challengeID, completed, updated)' +
-          'VALUES (:userID, :challengeID, :completed, :updated)',
+          `INSERT INTO userChallenge(userID, challengeID, completed, updated)
+           VALUES (:userID, :challengeID, :completed, :updated)
+           ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
           { userID: userID, challengeID: challengeID, completed: completed, updated: updated });
 
       }
     }
 
   }
+    static async processAlgorithms(userID, rows){
 
-  static async scrape(ctx){
+        const tableName = 'algorithm';
+        for (const r of rows.children) {
+            if (r.name === 'tr') {
+                let updated = null;
+                let algorithmID =0;
+                const algorithm = r.children[0].children[0].data;
+                const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+                if(r.children[2].children){
+                    updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+                }
+                console.log(algorithm,completed,updated);
+
+                //go into db and take c.id that = algorithms
+                const [algor] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :algorithm`, {algorithm: algorithm});
+
+                //  if algor is not found/has length insert
+                if(algor.length) {
+                    algorithmID = algor[0].id;
+                } else {
+                    const [insAlg] = await global.db.query('INSERT INTO algorithm (name) values (:algorithm)', {algorithm: algorithm});
+                    algorithmID = insAlg.insertId;
+                }
+
+                global.db.query(
+                    `INSERT INTO useralgorithm(userID, algorithmID, completed, updated)
+                    VALUES (:userID, :algorithmID, :completed, :updated)
+                    ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
+                    { userID: userID, algorithmID: algorithmID, completed: completed, updated: updated });
+
+            }
+        }
+
+    }
+    static async processProjects(userID, rows){
+
+        const tableName = 'project';
+        for (const r of rows.children) {
+            if (r.name === 'tr') {
+                let updated = null;
+                let projectID =0;
+                const project = r.children[0].children[0].children[0].data;
+                const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+                if(r.children[2].children){
+                    updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+                }
+                console.log(project,completed,updated);
+
+                //go into db and take c.id that = projenge
+                const [proj] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :project`, {project: project});
+
+                //  if proj is not found/has length insert
+                if(proj.length) {
+                    projectID = proj[0].id;
+                } else {
+                    const [insProj] = await global.db.query('INSERT INTO project (name) values (:project)', {project: project});
+                    projectID = insProj.insertId;
+                }
+
+                global.db.query(
+                    `INSERT INTO userProject(userID, projectID, completed, updated)
+                    VALUES (:userID, :projectID, :completed, :updated)
+                    ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
+                    { userID: userID, projectID: projectID, completed: completed, updated: updated });
+
+            }
+        }
+
+    }
+
+
+
+    static async scrape(ctx){
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
       `SELECT * 
@@ -225,6 +298,11 @@ class User {
             case 'Challenges':
               await User.processChallenges(userID, rows.children[i].children[0]);
               break;
+              case 'Algorithms':
+                await User.processAlgorithms(userID, rows.children[i].children[0]);
+                break;
+              case 'Projects':
+                await User.processProjects(userID, rows.children[i].children[0]);
           }
         }
       }
