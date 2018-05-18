@@ -500,10 +500,17 @@ class User {
     let result;
 
     try {
-      console.log('body', ctx.request.body.password);
+      let body = {};
+      if (ctx.request.body.password === undefined){
+        body = JSON.parse(ctx.request.body);
+      }else{
+        body = ctx.request.body;
+      }
+
+      console.log('body', body.password);
       var newPassword = '';
       while (newPassword.length < 10)
-        newPassword = scrypt.kdfSync(ctx.request.body.password, {
+        newPassword = scrypt.kdfSync(body.password, {
           N: 16,
           r: 8,
           p: 2
@@ -511,11 +518,10 @@ class User {
       [result] = await global.db.query(
         `insert into user (fname, lname, email, password, teamID, role, status) values (:fname, :lname, :email, :password, :teamID, :role, :status)`,
         {
-          fname: ctx.request.body.fname,
-          lname: ctx.request.body.lname,
-          email: ctx.request.body.email,
+          fname: body.fname,
+          lname: body.lname,
+          email: body.email,
           password: newPassword,
-          teamID: ctx.request.body.teamID,
           role: 1,
           status: 1
         }
@@ -525,7 +531,7 @@ class User {
       result = [{ error: 1 }];
     }
 
-    ctx.body = result.insertId;
+    ctx.body = result;
   }
 
   static async validateCode(ctx) {
