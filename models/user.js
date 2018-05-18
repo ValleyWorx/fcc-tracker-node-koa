@@ -319,7 +319,7 @@ class User {
     });
     const parser = new htmlparser.Parser(handler);
     parser.parseComplete(pageText);
-    const [[results]] = await global.db.query(
+    const [results] = await global.db.query(
         `select 'Challenges' as type, count(a.id) as total, count(b.userID) as done
         from   challenge a left outer join userChallenge b
         on a.id = b.challengeID and b.userID = :id
