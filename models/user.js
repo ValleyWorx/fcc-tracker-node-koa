@@ -319,8 +319,22 @@ class User {
     });
     const parser = new htmlparser.Parser(handler);
     parser.parseComplete(pageText);
+    const [[results]] = await global.db.query(
+        `select 'Challenges' as type, count(a.id) as total, count(b.userID) as done
+        from   challenge a left outer join userChallenge b
+        on a.id = b.challengeID and b.userID = :id
+        union
+        select 'Algorithms', count(a.\`id\`), count(b.userID) 
+        from   algorithm a left outer join userAlgorithm b
+        on a.id = b.\`algorithmID\` and b.userID = :id
+        union
+        select 'Projects', count(a.\`id\`), count(b.userID) 
+        from   project a left outer join userProject b
+        on a.id = b.\`projectID\` and b.userID = "id`,
+          {id: userID}
+      );
 
-    ctx.body = {result: 'Data Scraped'};
+    ctx.body = {result: results};
   }
 
   static async getMe(ctx) {
