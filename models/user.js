@@ -507,7 +507,7 @@ class User {
         body = ctx.request.body;
       }
 
-      console.log('body', body.password);
+      console.log('body', body);
       var newPassword = '';
       while (newPassword.length < 10)
         newPassword = scrypt.kdfSync(body.password, {
