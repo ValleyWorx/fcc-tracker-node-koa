@@ -502,12 +502,14 @@ class User {
     try {
       console.log('body', ctx.request.body);
       var newPassword = '';
-      while (newPassword.length < 10)
-        newPassword = scrypt.kdfSync(ctx.request.body.password, {
+      const key = new Buffer(ctx.request.body.password);
+      while (newPassword.length < 10) {
+        newPassword = scrypt.kdfSync(key, {
           N: 16,
           r: 8,
           p: 2
         });
+      }
       [result] = await global.db.query(
         `insert into user (fname, lname, email, password, teamID, role, status) values (:fname, :lname, :email, :password, :teamID, :role, :status)`,
         {
