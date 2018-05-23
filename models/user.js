@@ -181,10 +181,10 @@ class User {
         }
         console.log(challenge,completed,updated);
 
-        //go into db and take c.id that = challenge
+                //go into db and take c.id that = challenge
         const [chall] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :challenge`, { challenge: challenge });
 
-        //  if chall is not found/has length insert
+                //  if chall is not found/has length insert
         if(chall.length) {
           challengeID = chall[0].id;
         } else {
@@ -193,13 +193,14 @@ class User {
         }
 
         global.db.query(
-          `INSERT INTO userChallenge(userID, challengeID, completed, updated)
+                    `INSERT INTO userChallenge(userID, challengeID, completed, updated)
            VALUES (:userID, :challengeID, :completed, :updated)
            ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
-          { userID: userID, challengeID: challengeID, completed: completed, updated: updated });
+                    { userID: userID, challengeID: challengeID, completed: completed, updated: updated });
 
       }
     }
+
   }
     //processes the user's projects
   static async processProjects(userID, rows){
@@ -228,8 +229,8 @@ class User {
         }
 
         global.db.query(
-                    'INSERT INTO userProject(userID, projectID, completed, updated)' +
-                    'VALUES (:userID, :projectID, :completed, :updated)',
+                    `INSERT INTO userProject(userID, projectID, completed, updated)
+                     VALUES (:userID, :projectID, :completed, :updated)`,
                     { userID: userID, projectID: projectID, completed: completed, updated: updated });
 
       }
@@ -262,52 +263,52 @@ class User {
         }
 
         global.db.query(
-                    'INSERT INTO userAlgorithm(userID, algorithmID, completed, updated)' +
-                    'VALUES (:userID, :algorithmID, :completed, :updated)',
+                    `INSERT INTO userAlgorithm(userID, algorithmID, completed, updated)
+                     VALUES (:userID, :algorithmID, :completed, :updated)`,
                     { userID: userID, algorithmID: algorithmID, completed: completed, updated: updated });
 
       }
     }
   }
-    //processes the user's type
-    //keep processType and processProject
-  static async processType(tableType, userID, rows){
 
-    const tableName = tableType;
+    //processes any category of the user
+  static async processCategory(tableName, columnName, userTableName, userID, rows){
+
     for (const r of rows.children) {
       if (r.name === 'tr') {
         let updated = null;
-        let typeID =0;
-        /*let type = null;
+        let categoryID = 0;
+        let category = null;
         if (tableName === 'project'){
-          type = r.children[0].children[0].children[0].data;
+          category = r.children[0].children[0].children[0].data;
         } else {
-          type = r.children[0].children[0].data;
-        }*/
-        const type = r.children[0].children[0].data;
+          category = r.children[0].children[0].data;
+        }
+
         const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
         if(r.children[2].children){
           updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
         }
-        console.log(type,completed,updated);
+        console.log(category,completed,updated);
 
-                //go into db and take c.id that = type
-        const [dbType] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :type`,
-            { type: type });
+                //go into db and take c.id that = category
+        const [categ] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :category`,
+            { category: category });
 
-                //  if dbType is not found/has length insert
-        if(dbType.length) {
-          typeID = dbType[0].id;
+                //  if categ is not found/has length insert
+        if(categ.length) {
+          categoryID = categ[0].id;
         } else {
-          const [insType] = await global.db.query(`INSERT INTO ${tableName} (name) values (:type)`,
-              { type: type });
-          typeID = insType.insertId;
+          const [insCategory] = await global.db.query(`INSERT INTO ${tableName} (name) VALUES (:category)`,
+              { category: category });
+          categoryID = insCategory.insertId;
         }
 
         global.db.query(
-                    'INSERT INTO userType(userID, typeID, completed, updated)' +
-                    'VALUES (:userID, :typeID, :completed, :updated)',
-                    { userID: userID, typeID: typeID, completed: completed, updated: updated });
+                    `INSERT INTO ${userTableName}(userID, ${columnName}, completed, updated)
+                     VALUES (:userID, :categoryID, :completed, :updated)
+                     ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
+                    { userID: userID, categoryID: categoryID, completed: completed, updated: updated });
 
       }
     }
@@ -317,68 +318,35 @@ class User {
   static async scrape(ctx){
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
-      `SELECT * 
-        FROM user 
-        WHERE id = :id`,
-      { id: userID }
-    );
+            `SELECT * 
+            FROM user 
+            WHERE id = :id`,
+            { id: userID }
+        );
 
     const pagePromise = await fetch(`https://www.freecodecamp.org/${user.fccCode}`);
     const pageText = await pagePromise.text();
-    // console.log(pageText);
+        // console.log(pageText);
 
     const handler = new htmlparser.DefaultHandler(async function (error, dom) {
       if (error) {
         console.log('err', error);
       } else {
-//Stashed Changes <
-        const rows = dom[1].children[1].children[7].children[7].children[3].children[0].children[0];
+        const rows = dom[1].children[1].children[7].children[7].children[3];
+        for (const i in rows.children){ //Loop through all of the sections here
+          const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
+          const tableType = thSpot.data;
 
-        for (const r of rows.children) {
-          if (r.name === 'tr') {
-            let updated = '';
-            let challengeID = 0;
-            const challenge = r.children[0].children[0].data;
-            const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
-            if (r.children[2].children) {
-              updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
-            }
-            console.log(challenge, completed, updated);
-
-                    //from Anna
-            const [chall] = global.db.query('SELECT id FROM challenge WHERE name = :challenge',
-                        { challenge: challenge });
-
-                    //if chall is not found/has length insert
-            if (chall.length) {
-              challengeID = chall[0].id;
-              console.log('\nCurrent entry already exists\n');
-            } else {
-              const insChal = global.db.query('INSERT INTO challenge (name) values (:challenge)');
-              console.log('inserted challenge', insChal);
-              process.exit();
-            }
-
-            const rows = dom[1].children[1].children[7].children[7].children[3];
-            for (const i in rows.children) { //Loop through all of the sections here
-              const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
-              const tableType = thSpot.data;
-              switch (tableType) {
-                case 'Challenges':
-                  await User.processChallenges(userID, rows.children[i].children[0]);
-                  break;
-                case 'Projects':
-                  await User.processProjects(userID, rows.children[i].children[0]);
-                  break;
-                case 'Algorithms':
-                  await User.processAlgorithms(userID, rows.children[i].children[0]);
-                  break;
-                case 'Type':
-                  await User.processType(tableType, userID, rows.children[i].children[0]);
-                  break;
-// > Stashed changes
-              }
-            }
+          switch (tableType){
+            case 'Challenges':
+              await User.processCategory('challenge', 'challengeID', 'userChallenge', userID, rows.children[i].children[0]);
+              break;
+            case 'Algorithms':
+              await User.processCategory('algorithm', 'algorithmID', 'userAlgorithm', userID, rows.children[i].children[0]);
+              break;
+            case 'Projects':
+              await User.processCategory('project', 'projectID', 'userProject', userID, rows.children[i].children[0]);
+              break;
           }
         }
       }
