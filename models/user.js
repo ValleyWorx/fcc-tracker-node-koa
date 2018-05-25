@@ -515,8 +515,6 @@ class User {
   static async register(ctx) {
     let result;
 
-    console.log('register', ctx.request.body);
-
     try {
       let newPassword = '';
       while (newPassword.length < 10)
@@ -542,7 +540,7 @@ class User {
       result = [{ error: 1 }];
     }
 
-    ctx.body = result.insertId;
+    ctx.body = result;
   }
 
   static async validateCode(ctx) {

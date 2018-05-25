@@ -134,6 +134,12 @@ app.use(koaLogger(logger, {}));
 // ------------ routing
 
 // public (unsecured) modules first
+// app.use(async function cleanJSON(ctx, next) {
+//   if (!typeof ctx.request.body === 'object') {
+//     ctx.request.body = JSON.parse(ctx.request.body);
+//   }
+//   await next();
+// });
 
 app.use(require('./routes/routes-root.js'));
 app.use(require('./routes/routes-auth.js'));
@@ -186,5 +192,6 @@ console.info(
 );
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+
 
 module.exports = app;
