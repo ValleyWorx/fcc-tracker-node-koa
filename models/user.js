@@ -18,6 +18,12 @@ const htmlparser = require('htmlparser');
 class User {
 
   static async getAuth(ctx) {
+
+    if (!ctx.request.body.refreshToken && !ctx.request.body.email){
+      ctx.request.body = JSON.parse(ctx.request.body);
+    }
+
+
     let user = null;
     if (ctx.request.body.refreshToken) {
       [user] = await User.getByToken(ctx.request.body.refreshToken);
@@ -514,6 +520,11 @@ class User {
 
   static async register(ctx) {
     let result;
+
+    console.log(ctx.request.body);
+    if (!ctx.request.body.password && !ctx.request.body.email){
+      ctx.request.body = JSON.parse(ctx.request.body);
+    }
 
     try {
       let newPassword = '';
