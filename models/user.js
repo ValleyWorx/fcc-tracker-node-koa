@@ -515,6 +515,8 @@ class User {
   static async register(ctx) {
     let result;
 
+    console.log('register');
+
     try {
       if (ctx.request.body.teamID) {
         const sql = 'select teamID from teamInvite where email=:email and teamID = :teamID';
@@ -586,6 +588,8 @@ class User {
     // Empty variables
     let result = {};
     let team = {};
+
+    console.log('here');
 
     // Fetches an id from teamInvite with a given email
     try {
