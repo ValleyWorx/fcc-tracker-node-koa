@@ -549,13 +549,13 @@ class User {
           p: 2,
         });}
       [result] = await global.db.query(
-        'insert into user (fname, lname, email, password, teamID, role, status) values (:fname, :lname, :email, :password, :teamID, :role, :status)',
+        'insert into user (fname, lname, email, password, fccCode, role, status) values (:fname, :lname, :email, :password, :fccCode, :role, :status)',
         {
           fname:    ctx.request.body.fname,
           lname:    ctx.request.body.lname,
           email:    ctx.request.body.email,
           password: newPassword,
-          teamID:   ctx.request.body.teamID,
+          fccCode:   ctx.request.body.fccCode,
           role:     1,
           status:   1,
         }
