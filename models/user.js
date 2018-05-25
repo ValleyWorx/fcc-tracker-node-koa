@@ -45,7 +45,7 @@ class User {
           Buffer.from(user.password, 'base64'),
           body.password
         );
-        //console.log('test', match);
+
         if (!match) ctx.throw(401, 'Username/password not found.');
       } catch (e) {
         // e.g. "data is not a valid scrypt-encrypted block"
@@ -170,6 +170,49 @@ class User {
     console.log(user);
 
     ctx.body = user;
+  }
+  
+    //processes any category of the user
+  static async processCategory(tableName, columnName, userTableName, userID, rows){
+
+    for (const r of rows.children) {
+      if (r.name === 'tr') {
+        let updated = null;
+        let categoryID = 0;
+        let category = null;
+        if (tableName === 'project'){
+          category = r.children[0].children[0].children[0].data;
+        } else {
+          category = r.children[0].children[0].data;
+        }
+
+        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+        if(r.children[2].children){
+          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
+        }
+        console.log(category,completed,updated);
+
+                //go into db and take c.id that = category
+        const [categ] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :category`,
+            { category: category });
+
+                //  if categ is not found/has length insert
+        if(categ.length) {
+          categoryID = categ[0].id;
+        } else {
+          const [insCategory] = await global.db.query(`INSERT INTO ${tableName} (name) VALUES (:category)`,
+              { category: category });
+          categoryID = insCategory.insertId;
+        }
+
+        global.db.query(
+                    `INSERT INTO ${userTableName}(userID, ${columnName}, completed, updated)
+                     VALUES (:userID, :categoryID, :completed, :updated)
+                     ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
+                    { userID: userID, categoryID: categoryID, completed: completed, updated: updated });
+
+      }
+    }
   }
 
   static async processChallenges(userID, rows) {
@@ -326,21 +369,22 @@ class User {
   static async scrape(ctx) {
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
-      `SELECT * 
-        FROM user 
-        WHERE id = :id`,
-      { id: userID }
-    );
+            `SELECT * 
+            FROM user 
+            WHERE id = :id`,
+            { id: userID }
+        );
 
     const pagePromise = await fetch(`https://www.freecodecamp.org/${user.fccCode}`);
     const pageText = await pagePromise.text();
-    // console.log(pageText);
+        // console.log(pageText);
 
     const handler = new htmlparser.DefaultHandler(async function (error, dom) {
       if (error) {
         console.log('err', error);
       } else {
         const rows = dom[1].children[1].children[7].children[7].children[3];
+<<<<<<< HEAD
         for (const i in rows.children) { //Loop through all of the sections here
           const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
           const tableType = thSpot.data;
@@ -356,6 +400,22 @@ class User {
             case 'Projects':
               console.log('scraping projects');
               await User.processCategory('project', 'projectID', 'userProject', userID, rows.children[i].children[0]);
+=======
+        for (const i in rows.children){ //Loop through all of the sections here
+          const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
+          const tableType = thSpot.data;
+
+          switch (tableType){
+            case 'Challenges':
+              await User.processCategory('challenge', 'challengeID', 'userChallenge', userID, rows.children[i].children[0]);
+              break;
+            case 'Algorithms':
+              await User.processCategory('algorithm', 'algorithmID', 'userAlgorithm', userID, rows.children[i].children[0]);
+              break;
+            case 'Projects':
+              await User.processCategory('project', 'projectID', 'userProject', userID, rows.children[i].children[0]);
+              break;
+>>>>>>> fcc-tracker-backup
           }
         }
       }
@@ -377,7 +437,11 @@ class User {
           { id: userID }
       );
 
+<<<<<<< HEAD
     ctx.body = { result: results };
+=======
+    ctx.body = { result: 'Data Scraped' };
+>>>>>>> fcc-tracker-backup
   }
 
   static async getMe(ctx) {
@@ -408,6 +472,7 @@ class User {
         FROM userChallenge AS uc, challenge AS c
         WHERE uc.userID = :id
           AND uc.challengeID = c.id`,
+        AND uc.challengeID = c.id`,
       { id }
     );
 
@@ -427,6 +492,7 @@ class User {
       .query(`SELECT u.id, u.email, u.fname, u.lname, u.role, u.status, u.teamID, t.name as teamName, t.code as code, u.billingDay, u.billingRate, IF(u.customerID, 1, 0) as billable
                                              FROM user u left join team t on u.teamID = t.id
                                             ORDER BY id desc, teamName`);
+
     for (const i in users) {
       const [[b]] = await global.db.query(
         'SELECT * from userBilling where userID = ? order by id desc limit 1',
@@ -645,6 +711,7 @@ class User {
     let result;
 
     try {
+<<<<<<< HEAD
       let body = {};
       if (ctx.request.body.password === undefined) {
         body = JSON.parse(ctx.request.body);
@@ -656,11 +723,40 @@ class User {
       let newPassword = '';
       while (newPassword.length < 10)
         {newPassword = scrypt.kdfSync(body.password, {
+=======
+      if (ctx.request.body.teamID) {
+        const sql = 'select teamID from teamInvite where email=:email and teamID = :teamID';
+        const [[res]] = await global.db.query(sql, {
+          email:  ctx.request.body.email,
+          teamID: ctx.request.body.teamID,
+        });
+
+        if (res) {
+          const sql = 'delete from teamInvite where email=:email';
+          await global.db.query(sql, {
+            email: ctx.request.body.email,
+          });
+        } else {
+          ctx.status = 401;
+          return;
+        }
+      } else {
+        const sql = 'update teamInvite set declined = 1 where email=:email';
+        await global.db.query(sql, {
+          email: ctx.request.body.email,
+        });
+      }
+
+      let newPassword = '';
+      while (newPassword.length < 10)
+        {newPassword = scrypt.kdfSync(ctx.request.body.password, {
+>>>>>>> fcc-tracker-backup
           N: 16,
           r: 8,
           p: 2,
         });}
       [result] = await global.db.query(
+<<<<<<< HEAD
         'insert into user (fname, lname, email, password, fccCode, role, status) values (:fname, :lname, :email, :password, :fccCode, :role, :status)',
         {
           fname:    body.fname,
@@ -668,6 +764,15 @@ class User {
           email:    body.email,
           password: newPassword,
           fccCode:  body.fccCode,
+=======
+        'insert into user (fname, lname, email, password, teamID, role, status) values (:fname, :lname, :email, :password, :teamID, :role, :status)',
+        {
+          fname:    ctx.request.body.fname,
+          lname:    ctx.request.body.lname,
+          email:    ctx.request.body.email,
+          password: newPassword,
+          teamID:   ctx.request.body.teamID,
+>>>>>>> fcc-tracker-backup
           role:     1,
           status:   1,
         }
@@ -744,7 +849,11 @@ class User {
 
 }
 
+<<<<<<< HEAD
 const makeCode = function () {
+=======
+const makeCode = function() {
+>>>>>>> fcc-tracker-backup
   let text = '';
   const possible = 'BCDFGHJKLMNPQRSTVWXYZ0123456789';
   for (let i = 0; i < 6; i++)
