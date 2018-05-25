@@ -164,113 +164,7 @@ class User {
 
     ctx.body = user;
   }
-
-  //Stashed Changes <
-  //processes the user's challenges
-  static async processChallenges(userID, rows){
-
-    const tableName = 'challenge';
-    for (const r of rows.children) {
-      if (r.name === 'tr') {
-        let updated = null;
-        let challengeID =0;
-        const challenge = r.children[0].children[0].data;
-        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
-        if(r.children[2].children){
-          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
-        }
-        console.log(challenge,completed,updated);
-
-                //go into db and take c.id that = challenge
-        const [chall] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :challenge`, { challenge: challenge });
-
-                //  if chall is not found/has length insert
-        if(chall.length) {
-          challengeID = chall[0].id;
-        } else {
-          const [insChal] = await global.db.query('INSERT INTO challenge (name) values (:challenge)', { challenge: challenge });
-          challengeID = insChal.insertId;
-        }
-
-        global.db.query(
-                    `INSERT INTO userChallenge(userID, challengeID, completed, updated)
-           VALUES (:userID, :challengeID, :completed, :updated)
-           ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
-                    { userID: userID, challengeID: challengeID, completed: completed, updated: updated });
-
-      }
-    }
-
-  }
-    //processes the user's projects
-  static async processProjects(userID, rows){
-
-    const tableName = 'project';
-    for (const r of rows.children) {
-      if (r.name === 'tr') {
-        let updated = null;
-        let projectID =0;
-        const project = r.children[0].children[0].children[0].data;
-        console.log(project);
-        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
-        if(r.children[2].children){
-          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
-        }
-        console.log(project,completed,updated);
-        
-        const [proj] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :project`, { project: project });
-
-                //  if proj is not found/has length insert
-        if(proj.length) {
-          projectID = proj[0].id;
-        } else {
-          const [insProj] = await global.db.query(`INSERT INTO ${tableName} (name) values (:project)`, { project: project });
-          projectID = insProj.insertId;
-        }
-
-        global.db.query(
-                    `INSERT INTO userProject(userID, projectID, completed, updated)
-                     VALUES (:userID, :projectID, :completed, :updated)`,
-                    { userID: userID, projectID: projectID, completed: completed, updated: updated });
-
-      }
-    }
-  }
-    //processes the user's algorithms
-  static async processAlgorithms(userID, rows){
-
-    const tableName = 'algorithm';
-    for (const r of rows.children) {
-      if (r.name === 'tr') {
-        let updated = null;
-        let algorithmID =0;
-        const algorithm = r.children[0].children[0].data;
-        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
-        if(r.children[2].children){
-          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
-        }
-        console.log(algorithm,completed,updated);
-
-                //go into db and take c.id that = algorithm
-        const [algor] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :algorithm`, { algorithm: algorithm });
-
-                //  if algor is not found/has length insert
-        if(algor.length) {
-          algorithmID = algor[0].id;
-        } else {
-          const [insAlg] = await global.db.query('INSERT INTO algorithm (name) values (:algorithm)', { algorithm: algorithm });
-          algorithmID = insAlg.insertId;
-        }
-
-        global.db.query(
-                    `INSERT INTO userAlgorithm(userID, algorithmID, completed, updated)
-                     VALUES (:userID, :algorithmID, :completed, :updated)`,
-                    { userID: userID, algorithmID: algorithmID, completed: completed, updated: updated });
-
-      }
-    }
-  }
-
+  
     //processes any category of the user
   static async processCategory(tableName, columnName, userTableName, userID, rows){
 
@@ -313,7 +207,6 @@ class User {
       }
     }
   }
-// > Stashed changes
 
   static async scrape(ctx){
     const userID = ctx.state.user.id;
@@ -384,7 +277,7 @@ class User {
       `SELECT c.name, uc.updated, uc.completed
         FROM userChallenge AS uc, challenge AS c
         WHERE uc.userID = :id
-          AND uc.challengeID = c.id`,
+        AND uc.challengeID = c.id`,
       { id }
     );
 
@@ -404,7 +297,7 @@ class User {
       .query(`SELECT u.id, u.email, u.fname, u.lname, u.role, u.status, u.teamID, t.name as teamName, t.code as code, u.billingDay, u.billingRate, IF(u.customerID, 1, 0) as billable
                                              FROM user u left join team t on u.teamID = t.id
                                             ORDER BY id desc, teamName`);
-    //check
+
     for (const i in users) {
       const [[b]] = await global.db.query(
         'SELECT * from userBilling where userID = ? order by id desc limit 1',
