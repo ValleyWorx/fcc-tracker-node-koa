@@ -515,7 +515,7 @@ class User {
   static async register(ctx) {
     let result;
 
-    console.log('register');
+    console.log('register', ctx.request.body);
 
     try {
       let newPassword = '';
