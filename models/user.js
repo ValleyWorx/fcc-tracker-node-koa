@@ -178,26 +178,16 @@ class User {
   }
   
     //processes any category of the user
-  static async processCategory(tableName, columnName, userTableName, userID, rows){
+  static async processCategory(userID, rows){
 
     for (const r of rows.children) {
       if (r.name === 'tr') {
-        let updated = null;
         let categoryID = 0;
-        let category = null;
-        if (tableName === 'project'){
-          category = r.children[0].children[0].children[0].data;
-        } else {
-          category = r.children[0].children[0].data;
-        }
-
+        const category = r.children[0].children[0].children[0].data;
         const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
-        if(r.children[2].children){
-          updated = moment(r.children[2].children[0].data).format('YYYY-MM-DD');
-        }
-        console.log(category,completed,updated);
+        console.log(category,completed);
 
-                //go into db and take c.id that = category
+        //go into db and take c.id that = category
         const [categ] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :category`,
             { category: category });
 
@@ -250,29 +240,13 @@ class User {
       if (error) {
         console.log('err', error);
       } else {
-        const rows = dom[1].children[1].children[7].children[7].children[3];
-        for (const i in rows.children){ //Loop through all of the sections here
-          const thSpot = rows.children[i].children[0].children[0].children[0].children[0].children[0];
-          const tableType = thSpot.data;
-
-          switch (tableType){
-            case 'Challenges':
-              await User.processCategory('challenge', 'challengeID', 'userChallenge', userID, rows.children[i].children[0]);
-              break;
-            case 'Algorithms':
-              await User.processCategory('algorithm', 'algorithmID', 'userAlgorithm', userID, rows.children[i].children[0]);
-              break;
-            case 'Projects':
-              await User.processCategory('project', 'projectID', 'userProject', userID, rows.children[i].children[0]);
-              break;
-          }
-        }
+        await User.processCategory(userID, dom);
       }
     });
     const parser = new htmlparser.Parser(handler);
     parser.parseComplete(pageText);
     const [results] = await global.db.query(
-          `select 'Challenges' as type, count(a.id) as total, count(b.userID) as done
+      `select 'Challenges' as type, count(a.id) as total, count(b.userID) as done
         from   challenge a left outer join userChallenge b
         on a.id = b.challengeID and b.userID = :id
         union
