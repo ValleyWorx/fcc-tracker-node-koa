@@ -21,7 +21,9 @@ router.put('/user/save/:userID', user.save); // update a user
 router.put('/user/accept/:teamID', user.acceptInvite); // accept team invite
 
 router.get('/user', user.getMe);
+
 router.get('/user/scrape', user.scrape);
+
 router.get('/user/:userID', user.getUser);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 

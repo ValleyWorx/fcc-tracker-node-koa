@@ -14,6 +14,7 @@ const jwt = require('jsonwebtoken'); // JSON Web Token implementation
 const randomstring = require('randomstring');
 const fetch = require('node-fetch');
 const htmlparser = require('htmlparser');
+const puppeteer = require('puppeteer');
 
 class User {
 
@@ -228,9 +229,22 @@ class User {
             { id: userID }
         );
 
-    const pagePromise = await fetch(`https://www.freecodecamp.org/${user.fccCode}`);
-    const pageText = await pagePromise.text();
-        // console.log(pageText);
+    // This will not work against a React page
+    // const pagePromise = await fetch(`https://www.freecodecamp.org/${user.fccCode}`);
+    //const pageText = await pagePromise.text();
+    // console.log(pageText);
+
+    const url = `https://www.freecodecamp.org/portfolio/${user.fccCode}`;
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+    await page.goto(url);
+    await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > h2')
+
+    const pageText = await page.evaluate(() => {
+      return document.querySelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > table > tbody').innerHTML;
+    });
+
+    await browser.close();
 
     const handler = new htmlparser.DefaultHandler(async function (error, dom) {
       if (error) {
@@ -261,10 +275,6 @@ class User {
           `select 'Challenges' as type, count(a.id) as total, count(b.userID) as done
         from   challenge a left outer join userChallenge b
         on a.id = b.challengeID and b.userID = :id
-        union
-        select 'Algorithms', count(a.id), count(b.userID) 
-        from   algorithm a left outer join userAlgorithm b
-        on a.id = b.algorithmID and b.userID = :id
         union
         select 'Projects', count(a.id), count(b.userID) 
         from   project a left outer join userProject b
