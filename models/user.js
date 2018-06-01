@@ -55,12 +55,17 @@ class User {
 
     try {
 
+      if (!user.teamID){
+
+      }
+
       const payload = {
         id:         user.id, // to get user details
         role:       user.role, // make role available without db query
         teamID:     user.teamID,
         teamName:   user.teamName,
         sharedData: user.sharedData,
+        locationID: user.locationID,
       };
       //console.log('env', process.env.TOKEN_TIME);
       const token = jwt.sign(payload, process.env.JWT_KEY, {

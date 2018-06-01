@@ -39,6 +39,7 @@
     "mysql2": "^1.5.1",
     "mz": "^2.7.0",
     "node-fetch": "^1.7.3",
+    "puppeteer": "^1.4.0",
     "randomstring": "^1.1.5",
     "scrypt": "^6.0.3"
   },
