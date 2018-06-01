@@ -17,9 +17,6 @@
     "lint": "eslint --ignore-pattern app-api/apidoc .",
     "apidoc": "apidoc -i app-api -o app-api/apidoc/apidoc"
   },
-  "engines": {
-    "node": "^8.2.1"
-  },
   "dependencies": {
     "bunyan": "^1.8.12",
     "child-process-promise": "^2.2.0",
