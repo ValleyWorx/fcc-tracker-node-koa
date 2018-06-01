@@ -12,7 +12,7 @@ const scrypt = require('scrypt'); // scrypt library
 const moment = require('moment');
 const jwt = require('jsonwebtoken'); // JSON Web Token implementation
 const randomstring = require('randomstring');
-const fetch = require('node-fetch');
+//const fetch = require('node-fetch');
 const htmlparser = require('htmlparser');
 const puppeteer = require('puppeteer');
 
@@ -182,9 +182,18 @@ class User {
     for (const r of rows.children) {
       if (r.name === 'tr') {
         let categoryID = 0;
+        let tableName = 'challenge';
+        let userTableName = 'userchallenge';
+        let columnName = 'challengeID';
         const category = r.children[0].children[0].children[0].data;
         const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
         console.log(category,completed);
+
+        if(r.children[2].children){
+          tableName = 'project';
+          userTableName = 'userproject';
+          columnName = 'projectID';
+        }
 
         //go into db and take c.id that = category
         const [categ] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :category`,
@@ -202,8 +211,8 @@ class User {
         global.db.query(
                     `INSERT INTO ${userTableName}(userID, ${columnName}, completed, updated)
                      VALUES (:userID, :categoryID, :completed, :updated)
-                     ON DUPLICATE KEY UPDATE completed = :completed, updated = :updated`,
-                    { userID: userID, categoryID: categoryID, completed: completed, updated: updated });
+                     ON DUPLICATE KEY UPDATE completed = :completed`,
+                    { userID: userID, categoryID: categoryID, completed: completed });
 
       }
     }
