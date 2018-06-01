@@ -179,7 +179,6 @@ class User {
   
     //processes any category of the user
   static async processCategory(userID, rows){
-
     for (const r of rows.children) {
       if (r.name === 'tr') {
         let categoryID = 0;
