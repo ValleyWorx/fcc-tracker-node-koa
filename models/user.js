@@ -179,14 +179,14 @@ class User {
   
     //processes any category of the user
   static async processCategory(userID, rows){
-    for (const r of rows.children) {
+    for (const r of rows) {
       if (r.name === 'tr') {
         let categoryID = 0;
         let tableName = 'challenge';
         let userTableName = 'userchallenge';
         let columnName = 'challengeID';
         const category = r.children[0].children[0].children[0].data;
-        const completed = moment(r.children[1].children[0].data).format('YYYY-MM-DD');
+        const completed = r.children[1].children[0].data.split('"')[1].split('T')[0];
         console.log(category,completed);
 
         if(r.children[2].children){
