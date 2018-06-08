@@ -178,49 +178,56 @@ class User {
   }
   
     //processes any category of the user
-  static async processCategory(userID, rawHTML){
+  static async processCategory(userID, rawHTML) {
 
     const trs = rawHTML.split('<tr>');
 
-    //split on </td>
+      //split on </td>
     for (const r of trs) {
       if (trs === '') continue;
-      console.log(r);
+          //console.log(r);
 
-      if (r.name === 'tr') {
-        let categoryID = 0;
-        let tableName = 'challenge';
-        let userTableName = 'userChallenge';
-        let columnName = 'challengeID';
-        const category = r.children[0].children[0].children[0].data;
-        const completed = r.children[1].children[0].data.split('"')[1].split('T')[0];
-        console.log(category,completed);
+      const tds = r.split('</td>');
 
-        if(r.children[2].children){
-          tableName = 'project';
-          userTableName = 'userProject';
-          columnName = 'projectID';
-        }
+      for (const d of tds) {
+        if (tds === '') continue;
+        console.log(d);
 
-        //go into db and take c.id that = category
-        const [categ] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :category`,
-            { category: category });
+        if (r.name === 'tr') {
+          let categoryID = 0;
+          let tableName = 'challenge';
+          let userTableName = 'userChallenge';
+          let columnName = 'challengeID';
+          const category = r.children[0].children[0].children[0].data;
+          const completed = r.children[1].children[0].data.split('"')[1].split('T')[0];
+          console.log(category, completed);
 
-                //  if categ is not found/has length insert
-        if(categ.length) {
-          categoryID = categ[0].id;
-        } else {
-          const [insCategory] = await global.db.query(`INSERT INTO ${tableName} (name) VALUES (:category)`,
-              { category: category });
-          categoryID = insCategory.insertId;
-        }
+          if (r.children[2].children) {
+            tableName = 'project';
+            userTableName = 'userProject';
+            columnName = 'projectID';
+          }
 
-        global.db.query(
-                    `INSERT INTO ${userTableName}(userID, ${columnName}, completed, updated)
+                  //go into db and take c.id that = category
+          const [categ] = await global.db.query(`SELECT id FROM ${tableName} WHERE name = :category`,
+                      { category: category });
+
+                  //  if categ is not found/has length insert
+          if (categ.length) {
+            categoryID = categ[0].id;
+          } else {
+            const [insCategory] = await global.db.query(`INSERT INTO ${tableName} (name) VALUES (:category)`,
+                          { category: category });
+            categoryID = insCategory.insertId;
+          }
+
+          global.db.query(
+                      `INSERT INTO ${userTableName}(userID, ${columnName}, completed, updated)
                      VALUES (:userID, :categoryID, :completed, :updated)
                      ON DUPLICATE KEY UPDATE completed = :completed`,
-                    { userID: userID, categoryID: categoryID, completed: completed });
+                      { userID: userID, categoryID: categoryID, completed: completed });
 
+        }
       }
     }
   }
@@ -242,7 +249,7 @@ class User {
     const url = `https://www.freecodecamp.org/portfolio/${user.fccCode}`;
     const page = await global.browser.newPage();
     await page.goto(url);
-    await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > h2')
+    await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > h2');
 
     const pageText = await page.evaluate(() => {
       return document.querySelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > table > tbody').innerHTML;
@@ -548,7 +555,7 @@ class User {
           lname:    ctx.request.body.lname,
           email:    ctx.request.body.email,
           password: newPassword,
-          fccCode:   ctx.request.body.fccCode,
+          fccCode:  ctx.request.body.fccCode,
           role:     1,
           status:   1,
         }
