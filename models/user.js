@@ -183,7 +183,7 @@ class User {
       if (r.name === 'tr') {
         let categoryID = 0;
         let tableName = 'challenge';
-        let userTableName = 'userchallenge';
+        let userTableName = 'userChallenge';
         let columnName = 'challengeID';
         const category = r.children[0].children[0].children[0].data;
         const completed = r.children[1].children[0].data.split('"')[1].split('T')[0];
@@ -191,7 +191,7 @@ class User {
 
         if(r.children[2].children){
           tableName = 'project';
-          userTableName = 'userproject';
+          userTableName = 'userProject';
           columnName = 'projectID';
         }
 
