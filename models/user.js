@@ -176,22 +176,10 @@ class User {
   }
   
     //processes any category of the user
-  static async processCategory(userID, rawHTML) {
+  static async processCategory(userID, fccCode) {
 
-    const trs = rawHTML.split('<tr>');
-
-      //split on </td>
-    for (const r of trs) {
-      if (trs === '') continue;
-          //console.log(r);
-
-      const tds = r.split('</td>');
-
-      for (const d of tds) {
-        if (tds === '') continue;
-        console.log(d);
-
-        if (r.name === 'tr') {
+//<<<<<<<<
+        /*if (r.name === 'tr') {
           let categoryID = 0;
           let tableName = 'challenge';
           let userTableName = 'userChallenge';
@@ -227,10 +215,11 @@ class User {
 
         }
       }
-    }
+    }*/
+//>>>>>>>>
   }
 
-  static async scrape(ctx){
+  static async scrapeUser(ctx){
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
             `SELECT * 
@@ -239,12 +228,35 @@ class User {
             { id: userID }
         );
 
-    // This will not work against a React page
-    // const pagePromise = await fetch(`https://www.freecodecamp.org/${user.fccCode}`);
-    //const pageText = await pagePromise.text();
-    // console.log(pageText);
+    const url = `https://www.freecodecamp.org/${user.fccCode}`;
+    const page = await global.browser.newPage();
+    await page.goto(url);
+    console.log('Page Reached...')
+    await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody');
 
-    const url = `https://www.freecodecamp.org/portfolio/${user.fccCode}`;
+    const out = [];
+
+    console.log('Scraping Challenges...');
+    for (let i = 1;;i++) {
+      out[i - 1] = {};
+
+      out[i - 1].challenge = await page.evaluate((i) => {
+        try {
+          return (document.querySelector(`#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody > tr:nth-child(${i}) > td:nth-child(1) > a`).textContent);
+        } catch (e) {
+          return false;
+        }
+      }, i);
+
+      if (!out[i - 1].challenge) {
+        break;
+      }
+    }
+
+    console.log(out);
+
+//<<<<<<<
+    /*const url = `https://www.freecodecamp.org/portfolio/${user.fccCode}`;
     const page = await global.browser.newPage();
     await page.goto(url);
     await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > h2');
@@ -267,7 +279,8 @@ class User {
           { id: userID }
       );
 
-    ctx.body = { result: results };
+    ctx.body = { result: results };*/
+//>>>>>>>
   }
 
   static async getMe(ctx) {
@@ -667,7 +680,7 @@ async function doScrapeCurriculum() {
 
     for (let j = 1;;j++) {
 
-      let subHead = await page.evaluate((i, j) => {
+      const subHead = await page.evaluate((i, j) => {
         try {
           return document.querySelector(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > div > h5`).textContent;
         } catch(e) {
@@ -686,7 +699,7 @@ async function doScrapeCurriculum() {
       if (j === 1) out[i-1].stuff = [];
 
       for (let k = 2;;k++) {
-        let subSub = await page.evaluate((i, j, k) => {
+        const subSub = await page.evaluate((i, j, k) => {
           try {
             return document.querySelector(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > ul > li:nth-child(${k}) > a`).textContent;
           } catch(e) {
