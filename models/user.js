@@ -13,8 +13,6 @@ const moment = require('moment');
 const jwt = require('jsonwebtoken'); // JSON Web Token implementation
 const randomstring = require('randomstring');
 //const fetch = require('node-fetch');
-const htmlparser = require('htmlparser');
-const puppeteer = require('puppeteer');
 
 class User {
 
@@ -254,6 +252,8 @@ class User {
     const pageText = await page.evaluate(() => {
       return document.querySelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > table > tbody').innerHTML;
     });
+
+    page.close();
 
     await User.processCategory(userID, pageText);
     const [results] = await global.db.query(
@@ -632,7 +632,81 @@ class User {
     ctx.body = result; //Return only the ID
   }
 
+  static async scrapeCurriculum(ctx) {
+    await doScrapeCurriculum();
+  }
 }
+
+async function doScrapeCurriculum() {
+  const url = 'https://learn.freecodecamp.org/';
+  const page = await global.browser.newPage();
+  await page.goto(url);
+  await page.waitForSelector('#___gatsby > div > main > div > div.map-ui > ul');
+
+  const out = [];
+
+  for (let i = 1;;i++) {
+    out[i-1] = {};
+
+    out[i-1].cert = await page.evaluate((i) => {
+      try {
+        return document.querySelector(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > div > h4`).textContent;
+      } catch(e) {
+        return false;
+      }
+    }, i);
+
+    if (!out[i-1].cert) {
+      break;
+    }
+
+    if (i > 1) {
+      await page.click(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > div > h4`);
+    }
+
+
+    for (let j = 1;;j++) {
+
+      let subHead = await page.evaluate((i, j) => {
+        try {
+          return document.querySelector(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > div > h5`).textContent;
+        } catch(e) {
+          return false;
+        }
+      }, i, j);
+
+      if (!subHead) {
+        break;
+      }
+
+      if (i > 1 || (i === 1 && j > 1)) {
+        await page.click(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > div > h5`);
+      }
+
+      if (j === 1) out[i-1].stuff = [];
+
+      for (let k = 2;;k++) {
+        let subSub = await page.evaluate((i, j, k) => {
+          try {
+            return document.querySelector(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > ul > li:nth-child(${k}) > a`).textContent;
+          } catch(e) {
+            return false;
+          }
+        }, i, j, k);
+
+        if (!subSub) {
+          break;
+        }
+
+        out[i-1].stuff.push(subSub);
+
+      }
+    }
+  }
+
+  console.log(out);
+}
+
 
 const makeCode = function() {
   let text = '';
@@ -642,35 +716,6 @@ const makeCode = function() {
 
   return text;
 };
-
-async function teamSecurity(user, teamID) {
-  return true;
-
-  const sqla = 'select * from teamManager where teamID = :teamID and userID = :userID';
-  const [[manager]] = await global.db.query(sqla, {
-    teamID: teamID,
-    userID: user.id,
-  });
-  if (user.role < 4 && !manager) return false;
-  return true;
-}
-
-async function findSubTeams(teamID) {
-  const outTeam = [];
-  const sql = 'select id from team where upline = :teamID';
-  let [teams] = await global.db.query(sql, { teamID: teamID });
-  if (teams.length) {
-    for (const t of teams) {
-      outTeam.push(t.id);
-      const subTeams = await findSubTeams(t.id);
-      for (const s of subTeams) {
-        outTeam.push(s.id);
-      }
-      if (subTeams) teams = teams.concat(subTeams);
-    }
-  }
-  return outTeam;
-}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
