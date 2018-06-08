@@ -182,6 +182,7 @@ class User {
 
     const trs = rawHTML.split('<tr>');
 
+    //split on </td>
     for (const r of trs) {
       if (trs === '') continue;
       console.log(r);
