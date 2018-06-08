@@ -178,8 +178,14 @@ class User {
   }
   
     //processes any category of the user
-  static async processCategory(userID, rows){
-    for (const r of rows) {
+  static async processCategory(userID, rawHTML){
+
+    const trs = rawHTML.split('<tr>');
+
+    for (const r of trs) {
+      if (trs === '') continue;
+      console.log(r);
+
       if (r.name === 'tr') {
         let categoryID = 0;
         let tableName = 'challenge';
@@ -233,8 +239,7 @@ class User {
     // console.log(pageText);
 
     const url = `https://www.freecodecamp.org/portfolio/${user.fccCode}`;
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+    const page = await global.browser.newPage();
     await page.goto(url);
     await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > h2')
 
@@ -242,17 +247,7 @@ class User {
       return document.querySelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > table > tbody').innerHTML;
     });
 
-    await browser.close();
-
-    const handler = new htmlparser.DefaultHandler(async function (error, dom) {
-      if (error) {
-        console.log('err', error);
-      } else {
-        await User.processCategory(userID, dom);
-      }
-    });
-    const parser = new htmlparser.Parser(handler);
-    parser.parseComplete(pageText);
+    await User.processCategory(userID, pageText);
     const [results] = await global.db.query(
       `select 'Challenges' as type, count(a.id) as total, count(b.userID) as done
         from   challenge a left outer join userChallenge b

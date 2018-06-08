@@ -16,6 +16,7 @@ const cors = require('koa2-cors'); // CORS for Koa 2
 const jwt = require('jsonwebtoken'); // JSON Web Token implementation
 const bunyan = require('bunyan'); // logging
 const koaLogger = require('koa-bunyan'); // logging
+const puppeteer = require('puppeteer');
 
 require('dotenv').config(); // loads environment variables from .env file (if available - eg dev env)
 
@@ -31,6 +32,10 @@ const config = {
 };
 
 global.connectionPool = mysql.createPool(config); // put in global to pass to sub-apps
+
+(async function getBrower(){
+  global.browser = await puppeteer.launch();
+})();
 
 /* set up middleware which will be applied to each request - - - - - - - - - - - - - - - - - - -  */
 
