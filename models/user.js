@@ -233,7 +233,7 @@ class User {
     // console.log(pageText);
 
     const url = `https://www.freecodecamp.org/portfolio/${user.fccCode}`;
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto(url);
     await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > h2')
