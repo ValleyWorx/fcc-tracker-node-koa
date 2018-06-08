@@ -175,8 +175,8 @@ class User {
     ctx.body = user;
   }
   
-    //processes any category of the user
-  static async processCategory(userID, rawHTML){
+
+  /*static async processCategory(userID, rawHTML){
 
     const trs = rawHTML.split('<tr>');
 
@@ -220,7 +220,7 @@ class User {
 
       }
     }
-  }
+  }*/
 
   static async scrape(ctx){
     const userID = ctx.state.user.id;
