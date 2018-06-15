@@ -1,10 +1,10 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
-/* User model; users allowed to access the system                                                 */
-/*                                                                                                */
-/* All database modifications go through the model; most querying is in the handlers.             */
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+  /* User model; users allowed to access the system                                                 */
+  /*                                                                                                */
+  /* All database modifications go through the model; most querying is in the handlers.             */
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-'use strict';
+  'use strict';
 
 const Lib = require('../lib/lib.js');
 const ModelError = require('./modelerror.js');
@@ -174,12 +174,10 @@ class User {
 
     ctx.body = user;
   }
-  
-    //processes any category of the user
-  static async processCategory(userID, fccCode) {
 
-//<<<<<<<<
-        /*if (r.name === 'tr') {
+  /*static async processCategory(userID, fccCode) {
+
+        if (r.name === 'tr') {
           let categoryID = 0;
           let tableName = 'challenge';
           let userTableName = 'userChallenge';
@@ -212,21 +210,19 @@ class User {
                      VALUES (:userID, :categoryID, :completed, :updated)
                      ON DUPLICATE KEY UPDATE completed = :completed`,
                       { userID: userID, categoryID: categoryID, completed: completed });
-
         }
       }
-    }*/
-//>>>>>>>>
-  }
+    }
+  }*/
 
   static async scrapeUser(ctx){
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
-            `SELECT * 
+      `SELECT * 
             FROM user 
             WHERE id = :id`,
-            { id: userID }
-        );
+      { id: userID }
+    );
 
     const url = `https://www.freecodecamp.org/${user.fccCode}`;
     const page = await global.browser.newPage();
@@ -313,7 +309,7 @@ class User {
       if (b) {
         users[i].lastBilling = `${b.billingRate} on ${b.billingMonth}/${
           b.billingDay
-        }`;
+          }`;
       } else {
         users[i].lastBilling = '';
       }
@@ -439,11 +435,11 @@ class User {
     if (ctx.request.body.password && ctx.request.body.password.length > 3) {
       let newPassword = '';
       while (newPassword.length < 10)
-        {newPassword = scrypt.kdfSync(ctx.request.body.password, {
-          N: 16,
-          r: 8,
-          p: 2,
-        });}
+      {newPassword = scrypt.kdfSync(ctx.request.body.password, {
+        N: 16,
+        r: 8,
+        p: 2,
+      });}
       const resultPass = await global.db.query(
         'update user set password = :password where id = :id',
         {
@@ -529,11 +525,11 @@ class User {
     try {
       let newPassword = '';
       while (newPassword.length < 10)
-        {newPassword = scrypt.kdfSync(ctx.request.body.password, {
-          N: 16,
-          r: 8,
-          p: 2,
-        });}
+      {newPassword = scrypt.kdfSync(ctx.request.body.password, {
+        N: 16,
+        r: 8,
+        p: 2,
+      });}
       [result] = await global.db.query(
         'insert into user (fname, lname, email, password, fccCode, role, status) values (:fname, :lname, :email, :password, :fccCode, :role, :status)',
         {
@@ -704,7 +700,7 @@ const makeCode = function() {
   let text = '';
   const possible = 'BCDFGHJKLMNPQRSTVWXYZ0123456789';
   for (let i = 0; i < 6; i++)
-    {text += possible.charAt(Math.floor(Math.random() * possible.length));}
+  {text += possible.charAt(Math.floor(Math.random() * possible.length));}
 
   return text;
 };
@@ -712,3 +708,5 @@ const makeCode = function() {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
 module.exports = User;
+
+
