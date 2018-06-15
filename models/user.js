@@ -258,7 +258,8 @@ class User {
     await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > h2');
 
     const pageText = await page.evaluate(() => {
-      return document.querySelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > table > tbody').innerHTML;
+      return document.querySelector('#fcc > div > div.app-content.app-centered > div > div > div.row > di
+      v > table > tbody').innerHTML;
     });
 
     page.close();
