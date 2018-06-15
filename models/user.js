@@ -231,7 +231,7 @@ class User {
     const url = `https://www.freecodecamp.org/${user.fccCode}`;
     const page = await global.browser.newPage();
     await page.goto(url);
-    console.log('Page Reached...')
+    console.log('Page Reached...');
     await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody');
 
     const out = [];
@@ -254,33 +254,6 @@ class User {
     }
 
     console.log(out);
-
-//<<<<<<<
-    /*const url = `https://www.freecodecamp.org/portfolio/${user.fccCode}`;
-    const page = await global.browser.newPage();
-    await page.goto(url);
-    await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > h2');
-
-    const pageText = await page.evaluate(() => {
-      return document.querySelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > table > tbody').innerHTML;
-    });
-
-    page.close();
-
-    await User.processCategory(userID, pageText);
-    const [results] = await global.db.query(
-      `select 'Challenges' as type, count(a.id) as total, count(b.userID) as done
-        from   challenge a left outer join userChallenge b
-        on a.id = b.challengeID and b.userID = :id
-        union
-        select 'Projects', count(a.id), count(b.userID) 
-        from   project a left outer join userProject b
-        on a.id = b.projectID and b.userID = :id`,
-          { id: userID }
-      );
-
-    ctx.body = { result: results };*/
-//>>>>>>>
   }
 
   static async getMe(ctx) {
@@ -678,8 +651,10 @@ async function doScrapeCurriculum() {
     }
 
 
-    for (let j = 1;;j++) {
+    out[i - 1].subs = [];
 
+    for (let j = 1;;j++) {
+      out[i-1].subs[j-1] = {};
       const subHead = await page.evaluate((i, j) => {
         try {
           return document.querySelector(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > div > h5`).textContent;
@@ -692,11 +667,13 @@ async function doScrapeCurriculum() {
         break;
       }
 
+      out[i-1].subs[j-1].title = subHead;
+
       if (i > 1 || (i === 1 && j > 1)) {
         await page.click(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > div > h5`);
       }
 
-      if (j === 1) out[i-1].stuff = [];
+      out[i-1].subs[j-1].stuff = [];
 
       for (let k = 2;;k++) {
         const subSub = await page.evaluate((i, j, k) => {
@@ -711,13 +688,15 @@ async function doScrapeCurriculum() {
           break;
         }
 
-        out[i-1].stuff.push(subSub);
+        out[i-1].subs[j-1].stuff.push(subSub);
 
       }
     }
   }
 
   console.log(out);
+
+
 }
 
 
