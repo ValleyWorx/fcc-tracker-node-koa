@@ -1,10 +1,10 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
-/* User model; users allowed to access the system                                                 */
-/*                                                                                                */
-/* All database modifications go through the model; most querying is in the handlers.             */
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+  /* User model; users allowed to access the system                                                 */
+  /*                                                                                                */
+  /* All database modifications go through the model; most querying is in the handlers.             */
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-'use strict';
+  'use strict';
 
 const Lib = require('../lib/lib.js');
 const ModelError = require('./modelerror.js');
@@ -218,11 +218,11 @@ class User {
   static async scrapeUser(ctx){
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
-            `SELECT * 
+      `SELECT * 
             FROM user 
             WHERE id = :id`,
-            { id: userID }
-        );
+      { id: userID }
+    );
 
     const url = `https://www.freecodecamp.org/${user.fccCode}`;
     const page = await global.browser.newPage();
@@ -258,7 +258,8 @@ class User {
     await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > h2');
 
     const pageText = await page.evaluate(() => {
-      return document.querySelector('#fcc > div > div.app-content.app-centered > div > div > div.row > div > table > tbody').innerHTML;
+      return document.querySelector('#fcc > div > div.app-content.app-centered > div > div > div.row > di
+      v > table > tbody').innerHTML;
     });
 
     page.close();
@@ -269,7 +270,7 @@ class User {
         from   challenge a left outer join userChallenge b
         on a.id = b.challengeID and b.userID = :id
         union
-        select 'Projects', count(a.id), count(b.userID) 
+        select 'Projects', count(a.id), count(b.userID)
         from   project a left outer join userProject b
         on a.id = b.projectID and b.userID = :id`,
           { id: userID }
@@ -336,7 +337,7 @@ class User {
       if (b) {
         users[i].lastBilling = `${b.billingRate} on ${b.billingMonth}/${
           b.billingDay
-        }`;
+          }`;
       } else {
         users[i].lastBilling = '';
       }
@@ -462,11 +463,11 @@ class User {
     if (ctx.request.body.password && ctx.request.body.password.length > 3) {
       let newPassword = '';
       while (newPassword.length < 10)
-        {newPassword = scrypt.kdfSync(ctx.request.body.password, {
-          N: 16,
-          r: 8,
-          p: 2,
-        });}
+      {newPassword = scrypt.kdfSync(ctx.request.body.password, {
+        N: 16,
+        r: 8,
+        p: 2,
+      });}
       const resultPass = await global.db.query(
         'update user set password = :password where id = :id',
         {
@@ -552,11 +553,11 @@ class User {
     try {
       let newPassword = '';
       while (newPassword.length < 10)
-        {newPassword = scrypt.kdfSync(ctx.request.body.password, {
-          N: 16,
-          r: 8,
-          p: 2,
-        });}
+      {newPassword = scrypt.kdfSync(ctx.request.body.password, {
+        N: 16,
+        r: 8,
+        p: 2,
+      });}
       [result] = await global.db.query(
         'insert into user (fname, lname, email, password, fccCode, role, status) values (:fname, :lname, :email, :password, :fccCode, :role, :status)',
         {
@@ -721,7 +722,7 @@ const makeCode = function() {
   let text = '';
   const possible = 'BCDFGHJKLMNPQRSTVWXYZ0123456789';
   for (let i = 0; i < 6; i++)
-    {text += possible.charAt(Math.floor(Math.random() * possible.length));}
+  {text += possible.charAt(Math.floor(Math.random() * possible.length));}
 
   return text;
 };
@@ -729,3 +730,5 @@ const makeCode = function() {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
 module.exports = User;
+
+
