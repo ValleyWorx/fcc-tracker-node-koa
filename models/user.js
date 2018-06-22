@@ -300,6 +300,7 @@ class User {
       { userID: userID });
 
     for (const i in certs){
+      certs[i].totalCompleted = 0;
       for (const r of results) {
         if (certs[i].id === r.id) {
           certs[i].totalCompleted = r.totalCompleted;
