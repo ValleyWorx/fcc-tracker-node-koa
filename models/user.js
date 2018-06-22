@@ -1,10 +1,10 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
-  /* User model; users allowed to access the system                                                 */
-  /*                                                                                                */
-  /* All database modifications go through the model; most querying is in the handlers.             */
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+/* User model; users allowed to access the system                                                 */
+/*                                                                                                */
+/* All database modifications go through the model; most querying is in the handlers.             */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-  'use strict';
+'use strict';
 
 const Lib = require('../lib/lib.js');
 const ModelError = require('./modelerror.js');
@@ -12,13 +12,14 @@ const scrypt = require('scrypt'); // scrypt library
 const moment = require('moment');
 const jwt = require('jsonwebtoken'); // JSON Web Token implementation
 const randomstring = require('randomstring');
+
 //const fetch = require('node-fetch');
 
 class User {
 
   static async getAuth(ctx) {
 
-    if (!ctx.request.body.refreshToken && !ctx.request.body.email){
+    if (!ctx.request.body.refreshToken && !ctx.request.body.email) {
       ctx.request.body = JSON.parse(ctx.request.body);
     }
 
@@ -54,15 +55,15 @@ class User {
 
     try {
 
-      if (!user.teamID){
+      if (!user.teamID) {
 
       }
 
       const payload = {
-        id:         user.id, // to get user details
-        role:       user.role, // make role available without db query
-        teamID:     user.teamID,
-        teamName:   user.teamName,
+        id: user.id, // to get user details
+        role: user.role, // make role available without db query
+        teamID: user.teamID,
+        teamName: user.teamName,
         sharedData: user.sharedData,
         locationID: user.locationID,
       };
@@ -75,13 +76,13 @@ class User {
       const ret = User.addToken(user.id, refreshToken);
 
       ctx.body = {
-        jwt:          token,
-        role:         user.role,
-        fname:        user.fname,
-        lname:        user.lname,
-        id:           user.id,
+        jwt: token,
+        role: user.role,
+        fname: user.fname,
+        lname: user.lname,
+        id: user.id,
         refreshToken: refreshToken,
-        expires:      decoded.exp,
+        expires: decoded.exp,
       };
     } catch (e) {
       console.log(e);
@@ -95,7 +96,7 @@ class User {
     await global.db.query('update user set status = 0 where id = :id', {
       id: ctx.state.user.id,
     });
-    ctx.body = { msg: 'updated' };
+    ctx.body = {msg: 'updated'};
   }
 
   static async reactivate(ctx) {
@@ -105,11 +106,11 @@ class User {
     await global.db.query(
       'update user set status = 1, billingDay = :billingDay where id = :id',
       {
-        id:         ctx.state.user.id,
+        id: ctx.state.user.id,
         billingDay: billingDay,
       }
     );
-    ctx.body = { msg: 'updated' };
+    ctx.body = {msg: 'updated'};
   }
 
   static async acceptInvite(ctx) {
@@ -118,7 +119,7 @@ class User {
     [invite] = await global.db.query(
       'Select * From teamInvite Where email = :email and teamID = :teamID limit 1',
       {
-        email:  user.email,
+        email: user.email,
         teamID: ctx.params.teamID,
       }
     );
@@ -135,14 +136,14 @@ class User {
       await global.db.query(
         'Delete From teamInvite Where email = :email and teamID = :teamID limit 1',
         {
-          email:  user.email,
+          email: user.email,
           teamID: ctx.params.teamID,
         }
       );
 
-      ctx.body = { message: 'user added to team.', teamID: teamID };
+      ctx.body = {message: 'user added to team.', teamID: teamID};
     } else {
-      ctx.body = { message: 'user not added to team.', teamID: 0 };
+      ctx.body = {message: 'user not added to team.', teamID: 0};
     }
   }
 
@@ -150,7 +151,7 @@ class User {
     const user = await User.get(ctx.state.user.id);
     [user.billing] = await global.db.query(
       'Select * From userBilling Where userID = :id order by id desc limit 1',
-      { id: user.id }
+      {id: user.id}
     );
 
     const now = moment();
@@ -215,13 +216,13 @@ class User {
     }
   }*/
 
-  static async scrapeUser(ctx){
+  static async scrapeUser(ctx) {
     const userID = ctx.state.user.id;
     const [[user]] = await global.db.query(
       `SELECT * 
             FROM user 
             WHERE id = :id`,
-      { id: userID }
+      {id: userID}
     );
 
     const url = `https://www.freecodecamp.org/${user.fccCode}`;
@@ -233,7 +234,7 @@ class User {
     const out = [];
 
     console.log('Scraping Challenges...');
-    for (let i = 1;;i++) {
+    for (let i = 1; ; i++) {
       out[i - 1] = {};
 
       out[i - 1].challenge = await page.evaluate((i) => {
@@ -264,14 +265,14 @@ class User {
 
   static async get(id) {
     const user = {
-      info:       {},
+      info: {},
       challenges: [],
     };
     [[user.info]] = await global.db.query(
       `SELECT * 
         FROM user 
         WHERE id = :id`,
-      { id }
+      {id}
     );
     user.info.password = null;
 
@@ -280,7 +281,7 @@ class User {
         FROM userChallenge AS uc, challenge AS c
         WHERE uc.userID = :id
         AND uc.challengeID = c.id`,
-      { id }
+      {id}
     );
 
     user.challengeCount = user.challenges.length;
@@ -379,7 +380,7 @@ class User {
         const code = makeCode();
         const res = await global.db.query(
           'update team set code = :code where id = :id',
-          { code: code, id: id }
+          {code: code, id: id}
         );
         done = true;
       } catch (e) {
@@ -409,7 +410,7 @@ class User {
       await global.db.query(
         'update user set password = :password where id = :id',
         {
-          id:       ctx.request.body.id,
+          id: ctx.request.body.id,
           password: password,
         }
       );
@@ -418,14 +419,14 @@ class User {
     ctx.body = await global.db.query(
       'update user set fname = :fname, lname = :lname, email = :email, billingDay = :billingDay, billingRate = :billingRate, status = :status, role = :role where id = :id',
       {
-        fname:       ctx.request.body.fname,
-        lname:       ctx.request.body.lname,
-        email:       ctx.request.body.email,
-        billingDay:  ctx.request.body.billingDay,
+        fname: ctx.request.body.fname,
+        lname: ctx.request.body.lname,
+        email: ctx.request.body.email,
+        billingDay: ctx.request.body.billingDay,
         billingRate: ctx.request.body.billingRate,
-        status:      ctx.request.body.status,
-        role:        ctx.request.body.role,
-        id:          ctx.request.body.id,
+        status: ctx.request.body.status,
+        role: ctx.request.body.role,
+        id: ctx.request.body.id,
       }
     );
   }
@@ -434,16 +435,17 @@ class User {
     console.log(ctx.request.body);
     if (ctx.request.body.password && ctx.request.body.password.length > 3) {
       let newPassword = '';
-      while (newPassword.length < 10)
-      {newPassword = scrypt.kdfSync(ctx.request.body.password, {
-        N: 16,
-        r: 8,
-        p: 2,
-      });}
+      while (newPassword.length < 10) {
+        newPassword = scrypt.kdfSync(ctx.request.body.password, {
+          N: 16,
+          r: 8,
+          p: 2,
+        });
+      }
       const resultPass = await global.db.query(
         'update user set password = :password where id = :id',
         {
-          id:       ctx.request.body.id,
+          id: ctx.request.body.id,
           password: newPassword,
         }
       );
@@ -453,11 +455,11 @@ class User {
     const result = await global.db.query(
       'update user set email = :email, fname = :fname, lname = :lname, role = :role, status = :status, teamID = :teamID where id = :id',
       {
-        id:     ctx.params.userID,
-        email:  ctx.request.body.email,
-        fname:  ctx.request.body.fname,
-        lname:  ctx.request.body.lname,
-        role:   ctx.request.body.role,
+        id: ctx.params.userID,
+        email: ctx.request.body.email,
+        fname: ctx.request.body.fname,
+        lname: ctx.request.body.lname,
+        role: ctx.request.body.role,
         status: ctx.request.body.status,
         teamID: ctx.request.body.teamID,
       }
@@ -478,7 +480,7 @@ class User {
                      From user u 
                     Where u.${field} = :${field} 
                     Order By u.fname, u.lname`;
-      const [users] = await global.db.query(sql, { [field]: value });
+      const [users] = await global.db.query(sql, {[field]: value});
 
       return users;
     } catch (e) {
@@ -495,7 +497,7 @@ class User {
   static async addToken(userID, refreshToken) {
     const sql = 'insert into userToken (userID, refreshToken) values (:userID, :refreshToken)';
     const ret = await global.db.query(sql, {
-      userID:       userID,
+      userID: userID,
       refreshToken: refreshToken,
     });
     return ret;
@@ -506,10 +508,10 @@ class User {
                      From user u 
                           left outer join team t on u.teamID = t.id
                   Where u.id in (select userID from userToken where refreshToken = :token)`;
-    const [users] = await global.db.query(sql, { token: token });
+    const [users] = await global.db.query(sql, {token: token});
 
     const sql2 = 'delete from userToken where refreshToken = :token'; //This token has been used, remove it.
-    const res = await global.db.query(sql2, { token: token });
+    const res = await global.db.query(sql2, {token: token});
 
     return users;
   }
@@ -518,33 +520,34 @@ class User {
     let result;
 
     console.log(ctx.request.body);
-    if (!ctx.request.body.password && !ctx.request.body.email){
+    if (!ctx.request.body.password && !ctx.request.body.email) {
       ctx.request.body = JSON.parse(ctx.request.body);
     }
 
     try {
       let newPassword = '';
-      while (newPassword.length < 10)
-      {newPassword = scrypt.kdfSync(ctx.request.body.password, {
-        N: 16,
-        r: 8,
-        p: 2,
-      });}
+      while (newPassword.length < 10) {
+        newPassword = scrypt.kdfSync(ctx.request.body.password, {
+          N: 16,
+          r: 8,
+          p: 2,
+        });
+      }
       [result] = await global.db.query(
         'insert into user (fname, lname, email, password, fccCode, role, status) values (:fname, :lname, :email, :password, :fccCode, :role, :status)',
         {
-          fname:    ctx.request.body.fname,
-          lname:    ctx.request.body.lname,
-          email:    ctx.request.body.email,
+          fname: ctx.request.body.fname,
+          lname: ctx.request.body.lname,
+          email: ctx.request.body.email,
           password: newPassword,
-          fccCode:  ctx.request.body.fccCode,
-          role:     1,
-          status:   1,
+          fccCode: ctx.request.body.fccCode,
+          role: 1,
+          status: 1,
         }
       );
     } catch (e) {
       console.log('error', e);
-      result = [{ error: 1 }];
+      result = [{error: 1}];
     }
 
     ctx.body = result;
@@ -555,13 +558,13 @@ class User {
     try {
       [result] = await global.db.query(
         'select id, name from team where code = :code',
-        { code: ctx.params.code }
+        {code: ctx.params.code}
       );
     } catch (e) {
-      result = [{ id: 0 }];
+      result = [{id: 0}];
     }
     if (!result[0]) {
-      result = [{ id: 0 }];
+      result = [{id: 0}];
     }
     ctx.body = result[0]; //Return only the ID
   }
@@ -577,19 +580,19 @@ class User {
     try {
       [[team]] = await global.db.query(
         'select id, name from team where id = (select teamId from teamInvite where email = :email)',
-        { email: ctx.request.body.email }
+        {email: ctx.request.body.email}
       );
 
       // If there's a team ID...
       if (team.id) {
         // return the team name
-        result = { name: team.name, id: team.id };
+        result = {name: team.name, id: team.id};
       } else {
         // Else, return null
-        result = { name: null, id: null };
+        result = {name: null, id: null};
       }
     } catch (e) {
-      result = { name: null, id: null };
+      result = {name: null, id: null};
     }
 
     // Set the response body
@@ -602,14 +605,14 @@ class User {
     try {
       [[result]] = await global.db.query(
         'select id from user where email = :email',
-        { email: ctx.request.body.email }
+        {email: ctx.request.body.email}
       );
     } catch (e) {
       console.log('testEmail error', e);
-      result = { id: 0 };
+      result = {id: 0};
     }
     if (!result) {
-      result = { id: 0 };
+      result = {id: 0};
     }
     ctx.body = result; //Return only the ID
   }
@@ -627,19 +630,19 @@ async function doScrapeCurriculum() {
 
   const out = [];
 
-  for (let i = 1;;i++) {
+  for (let i = 1; ; i++) {
 
-    out[i-1] = {};
+    out[i - 1] = {};
 
-    out[i-1].cert = await page.evaluate((i) => {
+    out[i - 1].cert = await page.evaluate((i) => {
       try {
         return document.querySelector(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > div > h4`).textContent;
-      } catch(e) {
+      } catch (e) {
         return false;
       }
     }, i);
 
-    if (!out[i-1].cert) {
+    if (!out[i - 1].cert) {
       break;
     }
 
@@ -650,12 +653,12 @@ async function doScrapeCurriculum() {
 //creates array
     out[i - 1].subs = [];
 
-    for (let j = 1;;j++) {
-      out[i-1].subs[j-1] = {};
+    for (let j = 1; ; j++) {
+      out[i - 1].subs[j - 1] = {};
       const subHead = await page.evaluate((i, j) => {
         try {
           return document.querySelector(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > div > h5`).textContent;
-        } catch(e) {
+        } catch (e) {
           return false;
         }
       }, i, j);
@@ -664,19 +667,19 @@ async function doScrapeCurriculum() {
         break;
       }
 
-      out[i-1].subs[j-1].title = subHead;
+      out[i - 1].subs[j - 1].title = subHead;
 
       if (i > 1 || (i === 1 && j > 1)) {
         await page.click(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > div > h5`);
       }
 
-      out[i-1].subs[j-1].stuff = [];
+      out[i - 1].subs[j - 1].stuff = [];
 
-      for (let k = 2;;k++) {
+      for (let k = 2; ; k++) {
         const subSub = await page.evaluate((i, j, k) => {
           try {
             return document.querySelector(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > ul > li:nth-child(${j}) > ul > li:nth-child(${k}) > a`).textContent;
-          } catch(e) {
+          } catch (e) {
             return false;
           }
         }, i, j, k);
@@ -685,7 +688,7 @@ async function doScrapeCurriculum() {
           break;
         }
 
-        out[i-1].subs[j-1].stuff.push(subSub);
+        out[i - 1].subs[j - 1].stuff.push(subSub);
 
       }
     }
@@ -693,37 +696,35 @@ async function doScrapeCurriculum() {
 
   console.log(out);
 
-  for(const o of out){
-      const [cert] = await global.db.query(`INSERT INTO Certificate (name) VALUES (:o)`,
-          { o: o });
-      const certificateID = cert.insertId;
-      for(const s of o.subs){
-          const [subs] =  await global.db.query(`INSERT INTO CertSub (CertificateID, name) VALUES (:certificateID, :s)`,
-              {certificateID: certificateID, s: s });
-          const certsubID = subs.insertId;
-          for(const t of stuff){
-              const[stuff] = await global.db.query(`INSERT INTO Challenge (CertificateID, CertSubID,name) VALUES 
-              (:certificateID, :certsubID, :t)`,
-                  { certificateID: certificateID, certsubID: certsubID, t:t});
-          }
-
+  for (const o of out) {
+    const [cert] = await global.db.query(`INSERT INTO Certificate (name) 
+                                          VALUES (:name)
+                                          ON DUPLICATE KEY UPDATE name = :name`,
+      { name: o.cert });
+    const certificateID = cert.insertId;
+    for (const s of o.subs) {
+      const [subs] = await global.db.query(`INSERT INTO CertSub (certificateID, name) 
+                                            VALUES (:certificateID, :name)
+                                            ON DUPLICATE KEY UPDATE name = :name, certificateID = :certificateID`,
+        {certificateID: certificateID, name: s.title});
+      const certsubID = subs.insertId;
+      for (const t of s.stuff) {
+        const [stuff] = await global.db.query(`INSERT INTO Challenge (certificateID, certSubID, name) 
+                                               VALUES (:certificateID, :certsubID, :name)
+                                               ON DUPLICATE KEY UPDATE name = :name, certificateID = :certificateID, certSubID = :certSubID`,
+          { certificateID: certificateID, certsubID: certsubID, name: name });
       }
-
+    }
   }
-    global.db.query(
-        `INSERT INTO ${userTableName}(userID, ${columnName}, completed, updated)
-                   VALUES (:userID, :categoryID, :completed, :updated)
-                   ON DUPLICATE KEY UPDATE completed = :completed`,
-        { userID: userID, categoryID: categoryID, completed: completed })
-
 }
 
 
-const makeCode = function() {
+const makeCode = function () {
   let text = '';
   const possible = 'BCDFGHJKLMNPQRSTVWXYZ0123456789';
-  for (let i = 0; i < 6; i++)
-  {text += possible.charAt(Math.floor(Math.random() * possible.length));}
+  for (let i = 0; i < 6; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
 
   return text;
 };
