@@ -253,6 +253,8 @@ class User {
       }
     }
 
+    console.log(out);
+
     for (const c of out) {
 
       // Figure out which challenge this is by matching on name in challenge table
