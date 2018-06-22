@@ -265,17 +265,17 @@ class User {
         {challengeName: c.challenge}
       );
 
-      const cDate = moment(c.completed);
+      const cDate = moment(c.completed).format('YYYY-MM-DD');
 
       // Add this to the userChallenge table
       console.log(`INSERT INTO userChallenge (userID, challengeID, completed)
-      VALUES (${userID}, ${challengeID}, '${completed}')
-      ON DUPLICATE KEY UPDATE completed = '${completed}'`);
+      VALUES (${userID}, ${challengeID}, '${cDate}')
+      ON DUPLICATE KEY UPDATE completed = '${cDate}'`);
       await global.db.query(
         `INSERT INTO userChallenge (userID, challengeID, completed)
            VALUES (:userID, :challengeID, :completed)
            ON DUPLICATE KEY UPDATE completed = :completed`,
-        { userID: userID, challengeID: challengeID, completed: cDate.format('YYYY-MM-DD') });
+        { userID: userID, challengeID: challengeID, completed: cDate });
 
 
     }
