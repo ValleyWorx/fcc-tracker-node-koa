@@ -266,6 +266,9 @@ class User {
       const cDate = moment(c.completed);
 
       // Add this to the userChallenge table
+      console.log(`INSERT INTO userChallenge (userID, challengeID, completed)
+      VALUES (${userID}, ${challengeID}, '${completed}')
+      ON DUPLICATE KEY UPDATE completed = '${completed}'`);
       await global.db.query(
         `INSERT INTO userChallenge (userID, challengeID, completed)
            VALUES (:userID, :challengeID, :completed)
