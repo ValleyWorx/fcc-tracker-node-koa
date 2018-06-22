@@ -264,7 +264,7 @@ class User {
              WHERE name = :challengeName`,
         { challengeName: c.challenge }
       );
-      if (!challenge.id) continue;
+      if (!challenge || !challenge.id) continue;
 
       const challengeID = challenge.id;
 
