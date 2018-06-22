@@ -258,13 +258,18 @@ class User {
     for (const c of out) {
 
       // Figure out which challenge this is by matching on name in challenge table
-      const [[challenge]] = await global.db.query(
-        `SELECT id
+      let challenge;
+      try {
+        [[challenge]] = await global.db.query(
+          `SELECT id
              FROM challenge
              WHERE name = :challengeName`,
-        {challengeName: c.challenge}
-      );
-      const challengeID = challenge.id;
+          {challengeName: c.challenge}
+        );
+        const challengeID = challenge.id;
+      } catch (e) {
+        console.log('error', challenge, c.challenge);
+      }
 
       const cDate = moment(c.completed).format('YYYY-MM-DD');
 
