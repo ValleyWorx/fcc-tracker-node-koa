@@ -703,10 +703,12 @@ async function doScrapeCurriculum() {
       { name: o.cert });
     const certificateID = cert.insertId;
     for (const s of o.subs) {
+      console.log('subs', s);
+      if (!s.title) continue;
       const [subs] = await global.db.query(`INSERT INTO certSub (certificateID, name) 
                                             VALUES (:certificateID, :name)
                                             ON DUPLICATE KEY UPDATE name = :name, certificateID = :certificateID`,
-        {certificateID: certificateID, name: s.title});
+        { certificateID: certificateID, name: s.title });
       const certsubID = subs.insertId;
       for (const t of s.stuff) {
         const [stuff] = await global.db.query(`INSERT INTO challenge (certificateID, certSubID, name) 
