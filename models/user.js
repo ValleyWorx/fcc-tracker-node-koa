@@ -264,9 +264,10 @@ class User {
              WHERE name = :challengeName`,
         { challengeName: c.challenge }
       );
+      if (!challenge.id) continue;
+
       const challengeID = challenge.id;
 
-      if (!challengeID) continue;
       const cDate = moment(c.completed).format('YYYY-MM-DD');
 
       // Add this to the userChallenge table
