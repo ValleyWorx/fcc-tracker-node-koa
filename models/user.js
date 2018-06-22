@@ -282,16 +282,32 @@ class User {
     }
 
     // Pull the totals by certificate for this user to return to them.
+
+    const [certs] = await global.db.query(
+      `SELECT t.id, t.name, count(*) totalChallenges
+         FROM certificate t,
+              challenge c
+        WHERE c.certificateID = t.id
+        group by t.id, t.name`);
+
     const [results] = await global.db.query(
-      `SELECT t.id, t.name, count(*) total
+      `SELECT t.id, t.name, count(*) totalCompleted
          FROM certificate t LEFT OUTER JOIN  challenge c on c.certificateID = t.id,
               userChallenge u
         WHERE u.challengeID = c.id
           AND u.userID = :userID
         group by t.id, t.name`,
-      {userID: userID});
+      { userID: userID });
 
-    ctx.body =  {results: results};
+    for (const i in certs){
+      for (const r of results) {
+        if (certs[i].id === r.id) {
+          certs[i].totalCompleted = r.totalCompleted;
+        }
+      }
+    }
+
+    ctx.body =  certs;
   }
 
   static async getMe(ctx) {
