@@ -291,7 +291,7 @@ class User {
         group by t.id, t.name`,
       {userID: userID});
 
-    return results;
+    ctx.body =  {results: results};
   }
 
   static async getMe(ctx) {
