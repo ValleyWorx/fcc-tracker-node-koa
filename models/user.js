@@ -259,6 +259,7 @@ class User {
 
       // Figure out which challenge this is by matching on name in challenge table
       let challenge;
+      let challengeID;
       try {
         [[challenge]] = await global.db.query(
           `SELECT id
@@ -266,7 +267,7 @@ class User {
              WHERE name = :challengeName`,
           {challengeName: c.challenge}
         );
-        const challengeID = challenge.id;
+        challengeID = challenge.id;
       } catch (e) {
         console.log('error', challenge, c.challenge);
       }
