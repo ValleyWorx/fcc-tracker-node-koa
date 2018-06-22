@@ -237,9 +237,12 @@ class User {
     for (let i = 1; ; i++) {
       out[i - 1] = {};
 
-      out[i - 1].challenge = await page.evaluate((i) => {
+      out[i - 1] = await page.evaluate((i) => {
         try {
-          return (document.querySelector(`#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody > tr:nth-child(${i}) > td:nth-child(1) > a`).textContent);
+          const ret = {};
+          ret.challenge = document.querySelector(`#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody > tr:nth-child(${i}) > td:nth-child(1) > a`).textContent;
+          ret.date =      document.querySelector(`#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody > tr:nth-child(${i}) > td.text-center > time`).textContent;
+          return ret;
         } catch (e) {
           return false;
         }
@@ -250,7 +253,19 @@ class User {
       }
     }
 
-    console.log(out);
+    for (const c of out) {
+
+      // Figure out which challenge this is by matching on name in challenge table
+
+      // Add this to the userChallenge table
+      await global.db.query(
+        `INSERT INTO userChallenge ... `,
+        {id: userID}
+      );
+    }
+
+    // Pull the totals by certificate for this user to return to them.
+
   }
 
   static async getMe(ctx) {
@@ -735,7 +750,6 @@ async function doScrapeCurriculum() {
 
   }
 }
-
 
 const makeCode = function () {
   let text = '';
