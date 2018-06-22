@@ -29,6 +29,7 @@ const config = {
   user:     process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
+  charset:  'utf8mb4',
 };
 
 global.connectionPool = mysql.createPool(config); // put in global to pass to sub-apps

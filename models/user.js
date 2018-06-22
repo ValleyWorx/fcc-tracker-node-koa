@@ -697,26 +697,40 @@ async function doScrapeCurriculum() {
   console.log(out);
 
   for (const o of out) {
+    try {
     const [cert] = await global.db.query(`INSERT INTO certificate (name) 
                                           VALUES (:name)
                                           ON DUPLICATE KEY UPDATE name = :name`,
-      { name: o.cert });
+      {name: o.cert});
     const certificateID = cert.insertId;
     for (const s of o.subs) {
       console.log('subs', s);
       if (!s.title) continue;
-      const [subs] = await global.db.query(`INSERT INTO certSub (certificateID, name) 
+      try {
+        const [subs] = await global.db.query(`INSERT INTO certSub (certificateID, name) 
                                             VALUES (:certificateID, :name)
                                             ON DUPLICATE KEY UPDATE name = :name, certificateID = :certificateID`,
-        { certificateID: certificateID, name: s.title });
-      const certsubID = subs.insertId;
-      for (const t of s.stuff) {
-        const [stuff] = await global.db.query(`INSERT INTO challenge (certificateID, certSubID, name) 
+          {certificateID: certificateID, name: s.title});
+        const certsubID = subs.insertId;
+        for (const t of s.stuff) {
+          try {
+            const [stuff] = await global.db.query(`INSERT INTO challenge (certificateID, certSubID, name) 
                                                VALUES (:certificateID, :certsubID, :name)
                                                ON DUPLICATE KEY UPDATE name = :name, certificateID = :certificateID, certSubID = :certSubID`,
-          { certificateID: certificateID, certsubID: certsubID, name: t });
+              {certificateID: certificateID, certsubID: certsubID, name: t});
+          } catch (e) {
+            console.log('challenge insert error', e);
+          }
+        }
+      } catch (e) {
+        console.log('subCert insert error', e);
       }
+
     }
+    } catch (e) {
+      console.log('certificate insert error', e);
+    }
+
   }
 }
 
