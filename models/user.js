@@ -260,7 +260,7 @@ class User {
             `SELECT id
              FROM challenge
              WHERE name = :challengeName`,
-            { challengeName: out[c].challenge }
+            { challengeName: c.challenge }
         );
 
       // Add this to the userChallenge table
@@ -270,7 +270,7 @@ class User {
           `INSERT INTO userChallenge(userID, challengeID, completed)
            VALUES (:userID, :challengeID, :completed)
            ON DUPLICATE KEY UPDATE completed = :completed`,
-          { userID: userID, challengeID: challengeID, completed: out[c].completed });
+          { userID: userID, challengeID: challengeID, completed: c.completed });
 
 
 
