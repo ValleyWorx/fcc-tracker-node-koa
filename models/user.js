@@ -263,6 +263,8 @@ class User {
         {challengeName: c.challenge}
       );
 
+      console.log(c.completed);
+
       // Add this to the userChallenge table
       await global.db.query(
         `INSERT INTO userChallenge (userID, challengeID, completed)
