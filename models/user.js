@@ -258,26 +258,19 @@ class User {
     for (const c of out) {
 
       // Figure out which challenge this is by matching on name in challenge table
-      let challenge;
-      let challengeID;
-      try {
-        [[challenge]] = await global.db.query(
-          `SELECT id
+      const [[challenge]] = await global.db.query(
+        `SELECT id
              FROM challenge
              WHERE name = :challengeName`,
-          {challengeName: c.challenge}
-        );
-        challengeID = challenge.id;
-      } catch (e) {
-        console.log('error', challenge, c.challenge);
-      }
+        { challengeName: c.challenge }
+      );
+      const challengeID = challenge.id;
 
+      if (!challengeID) continue;
       const cDate = moment(c.completed).format('YYYY-MM-DD');
 
       // Add this to the userChallenge table
-      console.log(`INSERT INTO userChallenge (userID, challengeID, completed)
-      VALUES (${userID}, ${challengeID}, '${cDate}')
-      ON DUPLICATE KEY UPDATE completed = '${cDate}'`);
+
       await global.db.query(
         `INSERT INTO userChallenge (userID, challengeID, completed)
            VALUES (:userID, :challengeID, :completed)
@@ -295,7 +288,7 @@ class User {
         WHERE u.challengeID = c.id
           AND u.userID = :userID
         group by t.id, t.name`,
-      { userID: userID });
+      {userID: userID});
 
     return results;
   }
