@@ -712,7 +712,7 @@ async function doScrapeCurriculum() {
         const [stuff] = await global.db.query(`INSERT INTO challenge (certificateID, certSubID, name) 
                                                VALUES (:certificateID, :certsubID, :name)
                                                ON DUPLICATE KEY UPDATE name = :name, certificateID = :certificateID, certSubID = :certSubID`,
-          { certificateID: certificateID, certsubID: certsubID, name: name });
+          { certificateID: certificateID, certsubID: certsubID, name: t });
       }
     }
   }
