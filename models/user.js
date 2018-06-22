@@ -628,6 +628,7 @@ async function doScrapeCurriculum() {
   const out = [];
 
   for (let i = 1;;i++) {
+
     out[i-1] = {};
 
     out[i-1].cert = await page.evaluate((i) => {
@@ -646,7 +647,7 @@ async function doScrapeCurriculum() {
       await page.click(`#___gatsby > div > main > div > div.map-ui > ul > li:nth-child(${i}) > div > h4`);
     }
 
-
+//creates array
     out[i - 1].subs = [];
 
     for (let j = 1;;j++) {
@@ -692,6 +693,28 @@ async function doScrapeCurriculum() {
 
   console.log(out);
 
+  for(const o of out){
+      const [cert] = await global.db.query(`INSERT INTO Certificate (name) VALUES (:o)`,
+          { o: o });
+      const certificateID = cert.insertId;
+      for(const s of o.subs){
+          const [subs] =  await global.db.query(`INSERT INTO CertSub (CertificateID, name) VALUES (:certificateID, :s)`,
+              {certificateID: certificateID, s: s });
+          const certsubID = subs.insertId;
+          for(const t of stuff){
+              const[stuff] = await global.db.query(`INSERT INTO Challenge (CertificateID, CertSubID,name) VALUES 
+              (:certificateID, :certsubID, :t)`,
+                  { certificateID: certificateID, certsubID: certsubID, t:t});
+          }
+
+      }
+
+  }
+    global.db.query(
+        `INSERT INTO ${userTableName}(userID, ${columnName}, completed, updated)
+                   VALUES (:userID, :categoryID, :completed, :updated)
+                   ON DUPLICATE KEY UPDATE completed = :completed`,
+        { userID: userID, categoryID: categoryID, completed: completed })
 
 }
 
@@ -708,5 +731,3 @@ const makeCode = function() {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
 module.exports = User;
-
-
