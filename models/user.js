@@ -216,8 +216,10 @@ class User {
     }
   }*/
 
-  static async scrapeUser(ctx) {
-    const userID = ctx.state.user.id;
+  static async scrapeUser(ctx, xUserID = 0) {
+
+    const userID = xUserID ? xUserID : ctx.state.user.id;
+
     const [[user]] = await global.db.query(
       `SELECT * 
             FROM user 
@@ -225,60 +227,64 @@ class User {
       {id: userID}
     );
 
-    const url = `https://www.freecodecamp.org/${user.fccCode}`;
-    const page = await global.browser.newPage();
-    await page.goto(url);
-    console.log('Page Reached...');
-    await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody');
+    if (moment(user.lastScrape).format('YYYY-MM-DD HH') < moment().format('YYYY-MM-DD HH')) {
 
-    const out = [];
 
-    console.log('Scraping Challenges...');
-    for (let i = 1; ; i++) {
-      out[i - 1] = {};
+      const url = `https://www.freecodecamp.org/${user.fccCode}`;
+      const page = await global.browser.newPage();
+      await page.goto(url);
+      console.log('Page Reached...');
+      await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody');
 
-      out[i - 1] = await page.evaluate((i) => {
-        try {
-          const ret = {};
-          ret.challenge = document.querySelector(`#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody > tr:nth-child(${i}) > td:nth-child(1) > a`).textContent;
-          ret.completed = document.querySelector(`#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody > tr:nth-child(${i}) > td.text-center > time`).textContent;
-          return ret;
-        } catch (e) {
-          return false;
+      const out = [];
+
+      console.log('Scraping Challenges...');
+      for (let i = 1; ; i++) {
+        out[i - 1] = {};
+
+        out[i - 1] = await page.evaluate((i) => {
+          try {
+            const ret = {};
+            ret.challenge = document.querySelector(`#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody > tr:nth-child(${i}) > td:nth-child(1) > a`).textContent;
+            ret.completed = document.querySelector(`#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody > tr:nth-child(${i}) > td.text-center > time`).textContent;
+            return ret;
+          } catch (e) {
+            return false;
+          }
+        }, i);
+
+        if (!out[i - 1].challenge) {
+          break;
         }
-      }, i);
-
-      if (!out[i - 1].challenge) {
-        break;
       }
-    }
 
-    console.log(out);
+      console.log(out);
 
-    for (const c of out) {
+      for (const c of out) {
 
-      // Figure out which challenge this is by matching on name in challenge table
-      const [[challenge]] = await global.db.query(
-        `SELECT id
+        // Figure out which challenge this is by matching on name in challenge table
+        const [[challenge]] = await global.db.query(
+          `SELECT id
              FROM challenge
              WHERE name = :challengeName`,
-        { challengeName: c.challenge }
-      );
-      if (!challenge || !challenge.id) continue;
+          {challengeName: c.challenge}
+        );
+        if (!challenge || !challenge.id) continue;
 
-      const challengeID = challenge.id;
+        const challengeID = challenge.id;
 
-      const cDate = moment(c.completed).format('YYYY-MM-DD');
+        const cDate = moment(c.completed).format('YYYY-MM-DD');
 
-      // Add this to the userChallenge table
+        // Add this to the userChallenge table
 
-      await global.db.query(
-        `INSERT INTO userChallenge (userID, challengeID, completed)
+        await global.db.query(
+          `INSERT INTO userChallenge (userID, challengeID, completed)
            VALUES (:userID, :challengeID, :completed)
            ON DUPLICATE KEY UPDATE completed = :completed`,
-        { userID: userID, challengeID: challengeID, completed: cDate });
+          {userID: userID, challengeID: challengeID, completed: cDate});
 
 
+      }
     }
 
     // Pull the totals by certificate for this user to return to them.
