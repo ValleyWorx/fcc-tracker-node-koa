@@ -11,11 +11,11 @@ const location = require('../models/location.js');
 
 //router.put('/team/edit', team.updateTeamMember);
 //router.get('/team/:teamID?', team.getTeam);
-router.post('/location', location.addLocation);
+//router.post('/location', location.addLocation);
 //router.put('/team/:teamID', team.updateTeam);
 //router.delete('/team/:teamID', team.removeTeam);
 
-router.post('/location/:locationID/member', location.addUserToLocation);
+//router.post('/location/:locationID/member', location.addUserToLocation);
 //router.delete('/team/:teamID/member/:memberID', team.disableTeamMember);
 //router.put('/team/:teamID/member/:memberID', team.enableTeamMember);
 //router.delete('/team/:teamID/member/:memberID/remove', team.removeTeamMember);
