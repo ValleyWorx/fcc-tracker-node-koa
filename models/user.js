@@ -223,7 +223,7 @@ class User {
 
     console.log('test', userID);
     const [[user]] = await global.db.query(
-      `SELECT * 
+           `SELECT * 
             FROM user 
             WHERE id = :id`,
       { id: userID }
@@ -269,7 +269,7 @@ class User {
           `SELECT id
              FROM challenge
              WHERE name = :challengeName`,
-          {challengeName: c.challenge}
+          { challengeName: c.challenge }
         );
         if (!challenge || !challenge.id) continue;
 
