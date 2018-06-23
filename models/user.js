@@ -260,7 +260,8 @@ class User {
         }
       }
 
-      console.log(out);
+      page.close;
+      // console.log(out);
 
       for (const c of out) {
 
