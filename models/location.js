@@ -50,7 +50,7 @@ class LocationHandlers {
       const locationID = ctx.params.locationID;
       const userID = ctx.params.userID;
       const user = ctx.state.user ? await User.get(ctx.state.user.id) : null;
-
+      const userID = (typeof xUserID !== 'function') ? xUserID : ctx.state.user.id;
       const sqla = 'update user set locationID = ? where id = ?';
       const res = await global.db.query(sqla, [ locationID, user.id ]);
 
@@ -65,21 +65,22 @@ class LocationHandlers {
     }
   }
 
-  static async getLocationInfo(ctx, locationID = 0) {
+  static async getLocationInfo(ctx, xLocationID) {
 
     console.log('Getting Location Info');
 
-    const user = ctx.state.user ? await User.get(ctx.state.user.id) : null;
+    // const user = ctx.state.user ? await User.get(ctx.state.user.id) : null;
 
         // use same ternary operator as above on locationID and user.locationID
-    const loc = ctx.state.user ? await User.get(ctx.state.user.locationID) : null;
+    //const loc = ctx.state.user ? await User.get(ctx.state.user.locationID) : null;
+    const locationID = (typeof xLocationID !== 'function') ? xLocationID : ctx.state.user.locationID;
 
         // Use sql to find a list of all users in your same location.
-    const [[localUsers]] = await global.db.query(
+    const [localUsers] = await global.db.query(
             `SELECT *
              FROM user
              WHERE locationID = :locationID`,
-          { locationID: 1 }
+          { locationID: locationID }
       );
     console.log(localUsers);
         // Loop through them and...
@@ -97,4 +98,4 @@ class LocationHandlers {
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-module.exports = TeamHandlers;
+module.exports = LocationHandlers;

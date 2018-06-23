@@ -181,6 +181,7 @@ app.use(async function verifyJwt(ctx, next) {
 app.use(require('./routes/routes-user.js'));
 app.use(require('./routes/routes-team.js'));
 app.use(require('./routes/routes-geo.js'));
+app.use(require('./routes/routes-location.js'));
 
 /*app.use(function *(){
   this.body = 'Invalid URL!!!';

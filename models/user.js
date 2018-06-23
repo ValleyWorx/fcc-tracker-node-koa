@@ -218,13 +218,15 @@ class User {
 
   static async scrapeUser(ctx, xUserID = 0) {
 
-    const userID = xUserID ? xUserID : ctx.state.user.id;
+    const userID = (typeof xUserID !== 'function') ? xUserID : ctx.state.user.id;
+    // const userID = ctx.state.user.id;
 
+    console.log('test', userID);
     const [[user]] = await global.db.query(
       `SELECT * 
             FROM user 
             WHERE id = :id`,
-      {id: userID}
+      { id: userID }
     );
 
     if (moment(user.lastScrape).format('YYYY-MM-DD HH') < moment().format('YYYY-MM-DD HH')) {
