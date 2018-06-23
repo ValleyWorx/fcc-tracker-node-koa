@@ -222,7 +222,7 @@ class User {
     // const userID = ctx.state.user.id;
 
     const [[user]] = await global.db.query(
-      `SELECT * 
+           `SELECT * 
             FROM user 
             WHERE id = :id`,
       { id: userID }
@@ -274,7 +274,7 @@ class User {
           `SELECT id
              FROM challenge
              WHERE name = :challengeName`,
-          {challengeName: c.challenge}
+          { challengeName: c.challenge }
         );
         if (!challenge || !challenge.id) continue;
 
@@ -288,7 +288,7 @@ class User {
           `INSERT INTO userChallenge (userID, challengeID, completed)
            VALUES (:userID, :challengeID, :completed)
            ON DUPLICATE KEY UPDATE completed = :completed`,
-          {userID: userID, challengeID: challengeID, completed: cDate});
+          { userID: userID, challengeID: challengeID, completed: cDate });
 
 
       }

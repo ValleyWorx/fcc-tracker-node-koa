@@ -67,7 +67,7 @@ class LocationHandlers {
 
   static async getLocationInfo(ctx, xLocationID) {
 
-    console.log('Getting Location Info');
+    console.log('Getting Location Info...');
 
     // const user = ctx.state.user ? await User.get(ctx.state.user.id) : null;
 
@@ -77,17 +77,30 @@ class LocationHandlers {
 
         // Use sql to find a list of all users in your same location.
     const [localUsers] = await global.db.query(
-            `SELECT *
+            `SELECT id
              FROM user
              WHERE locationID = :locationID`,
           { locationID: locationID }
       );
-    console.log(localUsers);
+
+    let localID = [];
+    for (const i in localUsers) {
+         localID[i] = localUsers[i].id;
+    }
+
+    console.log(localID);
         // Loop through them and...
-        //   User.scrapeUser(ctx, userID)
-        //   Create an array of userIDs  use push to an array defined above
+      for (const r of localID){
+          //   User.scrapeUser(ctx, userID)
+          User.scrapeUser(ctx, r);
+      }
+
+
+        //Create an array of userIDs  use push to an array defined above
 
         // Use array.join to make a comma separated list of userIDs
+      const listUserID = localID.join();
+      console.log(listUserID);
 
         // Find the count(*) of the userChallenge where cDate > (user moment to calculate a month ago) and userID in ([comma separated list of userIDs])
         // Find the count(*) of the userChallenge where cDate > (user moment to calculate a week ago) and userID in ([comma separated list of userIDs])
