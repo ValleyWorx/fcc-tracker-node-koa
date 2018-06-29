@@ -1,5 +1,6 @@
 'use strict';
 const User = require('./user.js');
+const moment = require('moment');
 
 class LocationHandlers {
 
@@ -80,7 +81,7 @@ class LocationHandlers {
             `SELECT id
              FROM user
              WHERE locationID = :locationID`,
-          { locationID: locationID }
+          { locationID: locationID}
       );
 
     let localID = [];
@@ -99,29 +100,35 @@ class LocationHandlers {
         //Create an array of userIDs  use push to an array defined above
 
         // Use array.join to make a comma separated list of userIDs
+
       const listUserID = localID.join();
       console.log(listUserID);
 
         // Find the count(*) of the userChallenge where cDate > (user moment to calculate a month ago) and userID in ([comma separated list of userIDs])
         // Find the count(*) of the userChallenge where cDate > (user moment to calculate a week ago) and userID in ([comma separated list of userIDs])
+      const monthDate = moment().subtract(30, 'days').format('YYYY-MM-DD')
+      const [mLocVelocity] = await global.db.query(
+          `SELECT t.locationID, count(*) totalCompleted
+            FROM user t LEFT OUTER JOIN  userchallenge c on c.userID = t.id
+            WHERE c.completed > :monthDate
+            AND t.locationID = :locationID
+            group by t.locationID`,
+          {locationID: locationID , monthDate: monthDate});
 
-      const monthDate = moment().subtract(30, 'days').format('YYYY-MM-DD');
-      const [mVelocity] = await global.db.query(
-          'SELECT count() totalCompleted' +
-          'FROM LEFT OUTER JOIN ' +
-          'WHERE '
-      )
+      const weekDate = moment().subtract(7, 'days').format('YYYY-MM-DD')
+      const [wLocVelocity] = await global.db.query(
+          `SELECT t.locationID, count(*) totalCompleted
+            FROM user t LEFT OUTER JOIN  userchallenge c on c.userID = t.id
+            WHERE c.completed > :weekDate
+            AND t.locationID = :locationID
+            group by t.locationID`,
+          {locationID: locationID, weekDate: weekDate });
 
-      const weekDate = moment().subtract(7, 'days').format('YYYY-MM-DD');
-      const [wVelocity] = await global.db.query(
-          `SELECT t.id, t.name, count(*) totalCompleted
-        FROM certificate t LEFT OUTER JOIN  challenge c on c.certificateID = t.id,
-             userChallenge u
-       WHERE u.challengeID = c.id
-         AND u.userID = :userID
-         AND u.completed > :weekDate
-       group by t.id, t.name`,
-          { userID: userID, weekDate: weekDate });
+      console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+      console.log(mLocVelocity);
+      console.log(wLocVelocity);
+      console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
   }
 
 }
