@@ -36,7 +36,6 @@ class User {
       }
     } else {
       [user] = await User.getBy('email', ctx.request.body.email);
-
       if (!user) ctx.throw(401, 'Username/password not found');
 
       try {
@@ -55,10 +54,6 @@ class User {
 
     try {
 
-      if (!user.teamID) {
-
-      }
-
       const payload = {
         id: user.id, // to get user details
         role: user.role, // make role available without db query
@@ -67,7 +62,7 @@ class User {
         sharedData: user.sharedData,
         locationID: user.locationID,
       };
-      //console.log('env', process.env.TOKEN_TIME);
+
       const token = jwt.sign(payload, process.env.JWT_KEY, {
         expiresIn: process.env.TOKEN_TIME,
       });
@@ -75,7 +70,7 @@ class User {
       const decoded = jwt.verify(token, process.env.JWT_KEY); // throws on invalid token
       const ret = User.addToken(user.id, refreshToken);
 
-      ctx.body = {
+      const result = {
         jwt: token,
         role: user.role,
         fname: user.fname,
@@ -84,6 +79,9 @@ class User {
         refreshToken: refreshToken,
         expires: decoded.exp,
       };
+
+      ctx.body = result;
+      return result;
     } catch (e) {
       console.log(e);
       // e.g. "data is not a valid scrypt-encrypted block"
@@ -654,9 +652,12 @@ class User {
     } catch (e) {
       console.log('error', e);
       result = [{error: 1}];
+      throw(e);
     }
 
-    ctx.body = result;
+    const result2 = await User.getAuth(ctx);
+    ctx.body = result2;
+
   }
 
   static async validateCode(ctx) {
