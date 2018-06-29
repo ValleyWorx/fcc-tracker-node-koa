@@ -92,8 +92,11 @@ class LocationHandlers {
     console.log(localID);
         // Loop through them and...
       for (const r of localID){
-          //   User.scrapeUser(ctx, userID)
-          User.scrapeUser(ctx, r);
+        try {
+            await User.scrapeUser(ctx, r);
+        } catch (e) {
+          console.log(e);
+        }
       }
 
 

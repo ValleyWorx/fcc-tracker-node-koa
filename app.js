@@ -35,7 +35,7 @@ const config = {
 global.connectionPool = mysql.createPool(config); // put in global to pass to sub-apps
 
 (async function getBrower(){
-  global.browser = await puppeteer.launch();
+  global.browser = await puppeteer.launch(/*{ headless: false }*/);
 })();
 
 /* set up middleware which will be applied to each request - - - - - - - - - - - - - - - - - - -  */

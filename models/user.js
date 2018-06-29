@@ -228,7 +228,7 @@ class User {
       { id: userID }
     );
 
-    console.log('test', user.fccCode);
+    console.log('FCCcode', user.fccCode);
     console.log('lastScrape', user.lastScrape, typeof user.lastScrape);
     console.log(moment(user.lastScrape).format('YYYY-MM-DD HH'));
     console.log(moment().format('YYYY-MM-DD HH'));
@@ -236,7 +236,7 @@ class User {
     if (user.lastScrape == 'Invalid Date' || moment(user.lastScrape).format('YYYY-MM-DD HH') < moment().format('YYYY-MM-DD HH')) {
 
 
-      const url = `https://www.freecodecamp.org/${user.fccCode}`;
+      const url = `https://www.freecodecamp.org/${(user.fccCode).toLowerCase()}`;
       const page = await global.browser.newPage();
       await page.goto(url);
       console.log('Page Reached...');
