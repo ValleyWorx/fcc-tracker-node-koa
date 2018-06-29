@@ -218,16 +218,22 @@ class User {
 
   static async scrapeUser(ctx, xUserID = 0) {
 
-    const userID = xUserID ? xUserID : ctx.state.user.id;
+    const userID = (typeof xUserID !== 'function') ? xUserID : ctx.state.user.id;
+    // const userID = ctx.state.user.id;
 
     const [[user]] = await global.db.query(
-      `SELECT * 
+           `SELECT * 
             FROM user 
             WHERE id = :id`,
-      {id: userID}
+      { id: userID }
     );
 
-    if (moment(user.lastScrape).format('YYYY-MM-DD HH') < moment().format('YYYY-MM-DD HH')) {
+    console.log('test', user.fccCode);
+    console.log('lastScrape', user.lastScrape, typeof user.lastScrape);
+    console.log(moment(user.lastScrape).format('YYYY-MM-DD HH'));
+    console.log(moment().format('YYYY-MM-DD HH'));
+
+    if (user.lastScrape == 'Invalid Date' || moment(user.lastScrape).format('YYYY-MM-DD HH') < moment().format('YYYY-MM-DD HH')) {
 
 
       const url = `https://www.freecodecamp.org/${user.fccCode}`;
@@ -258,6 +264,7 @@ class User {
         }
       }
 
+      page.close;
       console.log(out);
 
       for (const c of out) {
@@ -267,7 +274,7 @@ class User {
           `SELECT id
              FROM challenge
              WHERE name = :challengeName`,
-          {challengeName: c.challenge}
+          { challengeName: c.challenge }
         );
         if (!challenge || !challenge.id) continue;
 
@@ -288,6 +295,7 @@ class User {
     }
 
     // Pull the totals by certificate for this user to return to them.
+//    console.log('userID', userID);
 
     const [certs] = await global.db.query(
       `SELECT t.id, t.name, count(*) totalChallenges
@@ -305,13 +313,47 @@ class User {
         group by t.id, t.name`,
       { userID: userID });
 
+    const res = {};
+    for (const v of results){
+      res[v.id] = v;
+    }
+
+    const monthDate = moment().subtract(30, 'days').format('YYYY-MM-DD')
+    const [mVelocity] = await global.db.query(
+      `SELECT t.id, t.name, count(*) totalCompleted
+         FROM certificate t LEFT OUTER JOIN  challenge c on c.certificateID = t.id,
+              userChallenge u
+        WHERE u.challengeID = c.id
+          AND u.userID = :userID
+          AND u.completed > :monthDate
+        group by t.id, t.name`,
+      { userID: userID, monthDate: monthDate });
+
+    const mVel = {};
+    for (const v of mVelocity){
+      mVel[v.id] = v;
+    }
+
+    const weekDate = moment().subtract(7, 'days').format('YYYY-MM-DD')
+    const [wVelocity] = await global.db.query(
+      `SELECT t.id, t.name, count(*) totalCompleted
+         FROM certificate t LEFT OUTER JOIN  challenge c on c.certificateID = t.id,
+              userChallenge u
+        WHERE u.challengeID = c.id
+          AND u.userID = :userID
+          AND u.completed > :weekDate
+        group by t.id, t.name`,
+      { userID: userID, weekDate: weekDate });
+
+    const wVel = {};
+    for (const v of wVelocity){
+      wVel[v.id] = v;
+    }
+
     for (const i in certs){
-      certs[i].totalCompleted = 0;
-      for (const r of results) {
-        if (certs[i].id === r.id) {
-          certs[i].totalCompleted = r.totalCompleted;
-        }
-      }
+      certs[i].totalCompleted = res[certs[i].id] ? res[certs[i].id].totalCompleted : 0;
+      certs[i].weekCompleted = wVel[certs[i].id] ? wVel[certs[i].id].totalCompleted : 0;
+      certs[i].monthCompleted = mVel[certs[i].id] ? mVel[certs[i].id].totalCompleted : 0;
     }
 
     ctx.body =  certs;
