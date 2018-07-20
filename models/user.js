@@ -819,6 +819,7 @@ async function doScrapeCurriculum() {
   console.log(out);
 
   for (const o of out) {
+    console.log(o.cert);
     try {
       if (!Number(o.cert)) continue;
       console.log(`adding ${o.cert}`);
