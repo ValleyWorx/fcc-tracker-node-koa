@@ -264,8 +264,6 @@ class User {
 
       page.close;
 
-      console.log('length:', out.length);
-
       for (const c of out) {
         if (!c.challenge) continue;
         // Figure out which challenge this is by matching on name in challenge table
@@ -299,10 +297,10 @@ class User {
       }
 
       // console.log('updating lastScrape for user ', userID);
-      // await global.db.query(
-      //   'update user set lastScrape = NOW() where id = :id',
-      //   { id: userID }
-      // );
+      await global.db.query(
+        'update user set lastScrape = NOW() where id = :id',
+        { id: userID }
+      );
 
     }
 
