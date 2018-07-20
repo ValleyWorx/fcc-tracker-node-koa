@@ -357,9 +357,10 @@ class User {
       certs[i].monthCompleted = mVel[certs[i].id] ? mVel[certs[i].id].totalCompleted : 0;
     }
 
+    console.log('updating lastScrape for user ', userID);
     await global.db.query(
       'update user set lastScrape = CURDATE() where id = :id',
-      { id: ctx.request.body.id }
+      { id: userID }
     );
 
     ctx.body =  certs;
