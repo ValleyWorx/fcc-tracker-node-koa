@@ -231,7 +231,7 @@ class User {
     // console.log(moment(user.lastScrape).format('YYYY-MM-DD HH'));
     // console.log(moment().format('YYYY-MM-DD HH'));
 
-    if (user.lastScrape === null || user.lastScrape == 'Invalid Date' || moment(user.lastScrape).format('YYYY-MM-DD HH II').add(30, 'minutes') < moment().format('YYYY-MM-DD HH II')) {
+    if (user.lastScrape === null || user.lastScrape == 'Invalid Date' || moment(user.lastScrape).add(30, 'minutes').format('YYYY-MM-DD HH II') < moment().format('YYYY-MM-DD HH II')) {
 
       const url = `https://www.freecodecamp.org/${(user.fccCode).toLowerCase()}`;
       const page = await global.browser.newPage();
