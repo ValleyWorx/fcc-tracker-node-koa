@@ -272,7 +272,6 @@ class User {
         const checkSQL = `SELECT id 
              FROM challenge
              WHERE REGEXP_REPLACE(LOWER(name), "[^\\\\w\\\\d]", '') = REGEXP_REPLACE(LOWER(:challengeName), "[^\\\\w\\\\d]", '')`;
-        console.log(checkSQL);
         const [[challenge]] = await global.db.query(
           checkSQL,
           { challengeName: c.challenge }
