@@ -275,7 +275,10 @@ class User {
              WHERE name = :challengeName`,
           { challengeName: c.challenge }
         );
-        if (!challenge || !challenge.id) continue;
+        if (!challenge || !challenge.id){
+          console.log(`did not find ${c.challenge}`)
+          continue;
+        }
 
         const challengeID = challenge.id;
 
