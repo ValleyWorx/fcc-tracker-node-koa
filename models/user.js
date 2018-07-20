@@ -820,7 +820,7 @@ async function doScrapeCurriculum() {
 
   for (const o of out) {
     try {
-      // if (!Number(o.cert)) continue;
+      if (!o.cert) continue;
       console.log(`adding ${o.cert}`);
       const [cert] = await global.db.query(`INSERT INTO certificate (name) 
                                           VALUES (:name)
@@ -837,7 +837,7 @@ async function doScrapeCurriculum() {
           const [subs] = await global.db.query(`INSERT INTO certSub (certificateID, name) 
                                             VALUES (:certificateID, :name)
                                             ON DUPLICATE KEY UPDATE name = :name, certificateID = :certificateID`,
-            {certificateID: certificateID, name: s.title});
+            { certificateID: certificateID, name: s.title });
           const certsubID = subs.insertId;
           for (const t of s.stuff) {
             try {
