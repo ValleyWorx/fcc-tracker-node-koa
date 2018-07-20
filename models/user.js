@@ -294,11 +294,11 @@ class User {
 
       }
 
-      console.log('updating lastScrape for user ', userID);
-      await global.db.query(
-        'update user set lastScrape = NOW() where id = :id',
-        { id: userID }
-      );
+      // console.log('updating lastScrape for user ', userID);
+      // await global.db.query(
+      //   'update user set lastScrape = NOW() where id = :id',
+      //   { id: userID }
+      // );
 
     }
 
