@@ -271,7 +271,7 @@ class User {
         // Figure out which challenge this is by matching on name in challenge table
         const checkSQL = `SELECT id 
              FROM challenge
-             WHERE LOWER(REGEXP_REPLACE(name, "[-.()\\\\s]", '')) = LOWER(REGEXP_REPLACE(:challengeName, "[-.()\\\\s]", ''))`;
+             WHERE REGEXP_REPLACE(LOWER(name), "[^\\\\w\\\\d]", '') = REGEXP_REPLACE(LOWER(:challengeName), "[^\\\\w\\\\d]", '')`;
         console.log(checkSQL);
         const [[challenge]] = await global.db.query(
           checkSQL,
