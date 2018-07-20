@@ -241,6 +241,7 @@ class User {
 
       const out = [];
 
+
       // console.log('Scraping Challenges...');
       for (let i = 1; ; i++) {
         out[i - 1] = {};
@@ -263,7 +264,7 @@ class User {
 
       page.close;
 
-      // console.log(out);
+      console.log('length:', out.length);
 
       for (const c of out) {
 
