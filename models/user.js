@@ -279,6 +279,8 @@ class User {
 
         const challengeID = challenge.id;
 
+        console.log(c.completed);
+
         const cDate = moment(c.completed).format('YYYY-MM-DD');
 
         // Add this to the userChallenge table
