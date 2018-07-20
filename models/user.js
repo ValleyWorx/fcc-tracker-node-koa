@@ -740,6 +740,7 @@ class User {
 
   static async scrapeCurriculum(ctx) {
     await doScrapeCurriculum();
+    ctx.body = {results: "scraped"};
   }
 }
 
