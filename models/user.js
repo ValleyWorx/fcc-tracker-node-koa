@@ -231,7 +231,7 @@ class User {
     // console.log(moment(user.lastScrape).format('YYYY-MM-DD HH'));
     // console.log(moment().format('YYYY-MM-DD HH'));
 
-    if (user.lastScrape === null || user.lastScrape == 'Invalid Date' || moment(user.lastScrape).format(' ') < moment().format('YYYY-MM-DD HH')) {
+    if (user.lastScrape === null || user.lastScrape == 'Invalid Date' || moment(user.lastScrape).format('YYYY-MM-DD HH II').add(30, 'minutes') < moment().format('YYYY-MM-DD HH II')) {
 
       const url = `https://www.freecodecamp.org/${(user.fccCode).toLowerCase()}`;
       const page = await global.browser.newPage();
@@ -292,6 +292,13 @@ class User {
           { userID: userID, challengeID: challengeID, completed: cDate });
 
       }
+
+      console.log('updating lastScrape for user ', userID);
+      await global.db.query(
+        'update user set lastScrape = NOW() where id = :id',
+        { id: userID }
+      );
+
     }
 
     // Pull the totals by certificate for this user to return to them.
@@ -356,12 +363,6 @@ class User {
       certs[i].weekCompleted = wVel[certs[i].id] ? wVel[certs[i].id].totalCompleted : 0;
       certs[i].monthCompleted = mVel[certs[i].id] ? mVel[certs[i].id].totalCompleted : 0;
     }
-
-    console.log('updating lastScrape for user ', userID);
-    await global.db.query(
-      'update user set lastScrape = CURDATE() where id = :id',
-      { id: userID }
-    );
 
     ctx.body =  certs;
   }
