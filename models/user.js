@@ -226,23 +226,22 @@ class User {
       { id: userID }
     );
 
-    console.log('FCCcode', user.fccCode);
-    console.log('lastScrape', user.lastScrape, typeof user.lastScrape);
-    console.log(moment(user.lastScrape).format('YYYY-MM-DD HH'));
-    console.log(moment().format('YYYY-MM-DD HH'));
+    // console.log('FCCcode', user.fccCode);
+    // console.log('lastScrape', user.lastScrape, typeof user.lastScrape);
+    // console.log(moment(user.lastScrape).format('YYYY-MM-DD HH'));
+    // console.log(moment().format('YYYY-MM-DD HH'));
 
     if (user.lastScrape === null || user.lastScrape == 'Invalid Date' || moment(user.lastScrape).format(' ') < moment().format('YYYY-MM-DD HH')) {
-
 
       const url = `https://www.freecodecamp.org/${(user.fccCode).toLowerCase()}`;
       const page = await global.browser.newPage();
       await page.goto(url);
-      console.log('Page Reached...');
+      // console.log('Page Reached...');
       await page.waitForSelector('#fcc > div > div.app-content.app-centered > div > div:nth-child(1) > div.row > div > table > tbody');
 
       const out = [];
 
-      console.log('Scraping Challenges...');
+      // console.log('Scraping Challenges...');
       for (let i = 1; ; i++) {
         out[i - 1] = {};
 
@@ -264,7 +263,7 @@ class User {
 
       page.close;
 
-      console.log(out);
+      // console.log(out);
 
       for (const c of out) {
 
@@ -357,6 +356,11 @@ class User {
       certs[i].weekCompleted = wVel[certs[i].id] ? wVel[certs[i].id].totalCompleted : 0;
       certs[i].monthCompleted = mVel[certs[i].id] ? mVel[certs[i].id].totalCompleted : 0;
     }
+
+    await global.db.query(
+      'update user set lastScrape = CURDATE() where id = :id',
+      { id: ctx.request.body.id }
+    );
 
     ctx.body =  certs;
   }
