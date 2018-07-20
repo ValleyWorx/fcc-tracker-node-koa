@@ -272,7 +272,7 @@ class User {
         const [[challenge]] = await global.db.query(
           `SELECT id
              FROM challenge
-             WHERE LOWER(REGEXP_REPLACE(name, '\W', '')) = LOWER(REGEXP_REPLACE(:challengeName, 'W', ''))`,
+             WHERE LOWER(REGEXP_REPLACE(name, '\W', '')) = LOWER(REGEXP_REPLACE(:challengeName, '\W', ''))`,
           { challengeName: c.challenge }
         );
         if (!challenge || !challenge.id){
