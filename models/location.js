@@ -90,11 +90,14 @@ class LocationHandlers {
     }
 
     console.log(localID);
-    // Loop through them and...
-    for (const r of localID) {
-      //   User.scrapeUser(ctx, userID)
-      await User.scrapeUser(ctx, r);
-    }
+        // Loop through them and...
+      for (const r of localID){
+        try {
+            await User.scrapeUser(ctx, r);
+        } catch (e) {
+          console.log(e);
+        }
+      }
 
 
     //Create an array of userIDs  use push to an array defined above
