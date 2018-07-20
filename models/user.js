@@ -279,7 +279,7 @@ class User {
 
         const challengeID = challenge.id;
 
-        console.log(c.completed);
+        console.log('c.completed', c.completed);
 
         const cDate = moment(c.completed).format('YYYY-MM-DD');
 
