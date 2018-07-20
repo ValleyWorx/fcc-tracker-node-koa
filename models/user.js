@@ -297,10 +297,11 @@ class User {
 
     const [certs] = await global.db.query(
       `SELECT t.id, t.name, count(*) totalChallenges
-         FROM certificate t,
+       FROM certificate t,
               challenge c
-        WHERE c.certificateID = t.id
-        group by t.id, t.name`);
+       WHERE c.certificateID = t.id
+       GROUP BY t.id, t.name
+       ORDER BY t.id`);
 
     const [results] = await global.db.query(
       `SELECT t.id, t.name, count(*) totalCompleted
@@ -324,7 +325,7 @@ class User {
         WHERE u.challengeID = c.id
           AND u.userID = :userID
           AND u.completed > :monthDate
-        group by t.id, t.name`,
+        GROUP BY t.id, t.name`,
       { userID: userID, monthDate: monthDate });
 
     const mVel = {};
