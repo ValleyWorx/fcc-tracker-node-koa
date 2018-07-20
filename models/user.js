@@ -267,7 +267,7 @@ class User {
       console.log('length:', out.length);
 
       for (const c of out) {
-
+        if (!c.challenge) continue;
         // Figure out which challenge this is by matching on name in challenge table
         const checkSQL = `SELECT id 
              FROM challenge
