@@ -231,7 +231,7 @@ class User {
     console.log(moment(user.lastScrape).format('YYYY-MM-DD HH'));
     console.log(moment().format('YYYY-MM-DD HH'));
 
-    if (user.lastScrape == 'Invalid Date' || moment(user.lastScrape).format(' ') < moment().format('YYYY-MM-DD HH')) {
+    if (user.lastScrape === null || user.lastScrape == 'Invalid Date' || moment(user.lastScrape).format(' ') < moment().format('YYYY-MM-DD HH')) {
 
 
       const url = `https://www.freecodecamp.org/${user.fccCode}`;
