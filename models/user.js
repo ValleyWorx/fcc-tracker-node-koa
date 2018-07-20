@@ -269,10 +269,12 @@ class User {
       for (const c of out) {
 
         // Figure out which challenge this is by matching on name in challenge table
-        const [[challenge]] = await global.db.query(
-          `SELECT id
+        const checkSQL = `SELECT id 
              FROM challenge
-             WHERE LOWER(REGEXP_REPLACE(name, '[.-()\s]', '')) = LOWER(REGEXP_REPLACE(:challengeName, '[.-()\s]', ''))`,
+             WHERE LOWER(REGEXP_REPLACE(name, "[-.()\\s]", '')) = LOWER(REGEXP_REPLACE(:challengeName, "[-.()\\s]"', ''))`;
+        console.log(checkSQL);
+        const [[challenge]] = await global.db.query(
+          checkSQL,
           { challengeName: c.challenge }
         );
         if (!challenge || !challenge.id){
