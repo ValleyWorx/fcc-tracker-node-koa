@@ -13,10 +13,8 @@ const body = require('koa-body'); // body parser
 const mysql = require('mysql2/promise'); // fast mysql driver
 const debug = require('debug')('app'); // small debugging utility
 const cors = require('koa2-cors'); // CORS for Koa 2
-const jwt = require('jsonwebtoken'); // JSON Web Token implementation
 const bunyan = require('bunyan'); // logging
 const koaLogger = require('koa-bunyan'); // logging
-const puppeteer = require('puppeteer');
 
 require('dotenv').config(); // loads environment variables from .env file (if available - eg dev env)
 
@@ -33,12 +31,6 @@ const config = {
 };
 
 global.connectionPool = mysql.createPool(config); // put in global to pass to sub-apps
-
-(async function getBrower(){
-  global.browser = await puppeteer.launch(/*{ headless: false }*/);
-})();
-
-/* set up middleware which will be applied to each request - - - - - - - - - - - - - - - - - - -  */
 
 // return response time in X-Response-Time header
 app.use(async function responseTime(ctx, next) {
@@ -137,57 +129,14 @@ const error = {
 const logger = bunyan.createLogger({ name: 'api', streams: [ access, error ] });
 app.use(koaLogger(logger, {}));
 
-// ------------ routing
+app.use(require('./routes/routes.js'));
 
-// public (unsecured) modules first
-// app.use(async function cleanJSON(ctx, next) {
-//   if (!typeof ctx.request.body === 'object') {
-//     ctx.request.body = JSON.parse(ctx.request.body);
-//   }
-//   await next();
-// });
 
-app.use(require('./routes/routes-root.js'));
-app.use(require('./routes/routes-auth.js'));
-
-// remaining routes require JWT auth (obtained from /auth and supplied in bearer authorization header)
-
-app.use(async function verifyJwt(ctx, next) {
-  if (!ctx.header.authorization) ctx.throw(401, 'Authorisation required');
-  const [ scheme, token ] = ctx.header.authorization.split(' ');
-  if (scheme != 'Bearer') ctx.throw(401, 'Invalid authorisation');
-
-  try {
-    const payload = jwt.verify(token, process.env.JWT_KEY); // throws on invalid token
-    // valid token: accept it...
-
-    let sqla = `select status from user where id = ${payload.id}`;
-    const [[res]] = await global.db.query(sqla);
-
-    if (res.status === 0){
-      throw({ status: 401, message: 'Account Disabled' });
-    }
-
-    ctx.state.user = payload; // for user id  to look up user details
-  } catch (e) {
-    if (e.message === 'invalid token') ctx.throw(401, 'Invalid JWT'); // Unauthorized
-    ctx.throw(e.status || 401, e.message); // Internal Server Error
-  }
-
-  await next();
-
-});
-
-app.use(require('./routes/routes-user.js'));
-app.use(require('./routes/routes-team.js'));
-app.use(require('./routes/routes-geo.js'));
-app.use(require('./routes/routes-location.js'));
-
-/*app.use(function *(){
+app.use(function *(){
   this.body = 'Invalid URL!!!';
   // or redirect etc
   // this.redirect('/someotherspot');
-});*/
+});
 
 /* create server - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
